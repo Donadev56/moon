@@ -1,17 +1,20 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moon/logger/logger.dart';
-import 'package:moon/main.dart';
-import 'package:moon/screens/dash/main.dart';
+
 import 'package:moon/utils/ethereum.dart';
 import 'package:moon/utils/register.dart';
 import 'package:moon/widget/model_bottom.dart';
 import 'package:moon/widget/snackbar.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+  final String? ref;
+
+  const AuthScreen({super.key, this.ref});
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -27,9 +30,10 @@ class _AuthScreenState extends State<AuthScreen> {
   String sponsorID = "";
   String userName = "";
   String userAddress = "";
+
+  Map<String, dynamic> sponsorData = {};
   bool isRegistering = false;
-  late TextEditingController _textEditingController ;
-  
+  late TextEditingController _textEditingController;
 
   Future<void> getUserAddress() async {
     try {
@@ -46,7 +50,7 @@ class _AuthScreenState extends State<AuthScreen> {
             message: "Address Connected ${address.substring(0, 4)} ...",
             iconColor: Colors.greenAccent);
       } else {
-              if (!mounted) return ;
+        if (!mounted) return;
 
         showCustomSnackBar(
             context: context,
@@ -84,9 +88,26 @@ class _AuthScreenState extends State<AuthScreen> {
       }
 
       final regManager = RegistrationManager();
+
+      final isReg = await regManager.isRegistered(userAddress);
+      if (isReg) {
+        setState(() {
+          isRegistering = false;
+        });
+        if (!mounted) return;
+
+        showCustomSnackBar(
+            context: context,
+            icon: Icons.error,
+            message: "User already registered",
+            iconColor: Colors.red);
+        context.go('/dashboard');
+
+        return;
+      }
       final success = await regManager.register(sponsorID, userName);
       if (success) {
-      if (!mounted) return ;
+        if (!mounted) return;
 
         showCustomSnackBar(
             context: context,
@@ -94,18 +115,17 @@ class _AuthScreenState extends State<AuthScreen> {
             message: "Registration Successful",
             iconColor: Colors.greenAccent);
 
-            setState(() {
-               sponsorID = "";
-                userName = "";
-            });
-      if (!mounted) return ;
-           context.go('/details');
-       
+        setState(() {
+          sponsorID = "";
+          userName = "";
+        });
+        if (!mounted) return;
+        context.go('/dashboard');
       } else {
         setState(() {
           isRegistering = false;
         });
-      if (!mounted) return ;
+        if (!mounted) return;
 
         showCustomSnackBar(
             context: context,
@@ -132,30 +152,39 @@ class _AuthScreenState extends State<AuthScreen> {
   void initState() {
     super.initState();
     getUserAddress();
+    _textEditingController = TextEditingController();
 
-     WidgetsBinding.instance.addPostFrameCallback((_) {
-    Uri uri = Uri.parse(ModalRoute.of(context)?.settings.name ?? '');
-    String? ref = uri.queryParameters['ref'];
-    log("the uri $uri ");
-
-    if (ref != null && ref.isNotEmpty) {
+    if (widget.ref != null) {
       setState(() {
+        final String ref = widget.ref!;
         sponsorID = ref;
         _textEditingController.text = sponsorID;
+        getUserdataWithAddress(ref);
       });
-    } else {
-      logError("Ref not found");
     }
-  });
-    _textEditingController = TextEditingController();
+  }
+
+  Future<void> getUserdataWithAddress(String id) async {
+    try {
+      final regManager = RegistrationManager();
+      final addr = await regManager.getSponsorAddress(int.parse(id));
+      if (addr.isNotEmpty && addr.length > 30) {
+        final data = await regManager.getUserInfo(addr);
+        log(json.encode(data).toString());
+        if (data.isNotEmpty) {
+          setState(() {
+            sponsorData = data;
+          });
+        }
+      }
+    } catch (e) {
+      logError(e.toString());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
- 
-
     final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
 
     return Scaffold(
         backgroundColor: Color(0XFF0D0D0D),
@@ -251,6 +280,26 @@ class _AuthScreenState extends State<AuthScreen> {
                     )
                   ],
                 ),
+                if (sponsorData.isNotEmpty)
+                  Container(
+                    width: width * 0.65,
+                    padding: const EdgeInsets.only(top: 10, left: 10),
+                    child: Row(
+                      children: [
+                        Text(
+                          "Sponsor Name :",
+                          style: GoogleFonts.audiowide(color: Colors.white),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Text(
+                          sponsorData["userData"]["name"],
+                          style: GoogleFonts.audiowide(color: Colors.orange),
+                        )
+                      ],
+                    ),
+                  ),
                 Form(
                     child: Column(
                   children: [
@@ -260,7 +309,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     Container(
                       width: width * 0.65,
                       padding: const EdgeInsets.all(10),
-                      margin: const EdgeInsets.only(top: 20, bottom: 10),
+                      margin: const EdgeInsets.only(top: 0, bottom: 10),
                       child: Text(
                         "Name",
                         style: GoogleFonts.audiowide(
@@ -313,11 +362,13 @@ class _AuthScreenState extends State<AuthScreen> {
                     ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: width * 0.6),
                       child: TextField(
+                        keyboardType: TextInputType.number,
                         controller: _textEditingController,
-                        onChanged: (value) {
+                        onChanged: (value) async {
                           setState(() {
                             sponsorID = value;
                           });
+                          await getUserdataWithAddress(sponsorID);
                         },
                         cursorColor: Colors.orange,
                         style: GoogleFonts.exo(color: Colors.white),
@@ -378,7 +429,26 @@ class _AuthScreenState extends State<AuthScreen> {
                             child: CircularProgressIndicator(
                               color: Colors.white,
                             ),
-                          )
+                          ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        context.go('/');
+                      },
+                      child: Container(
+                        width: width * 0.63,
+                        padding: const EdgeInsets.all(10),
+                        child: Text(
+                          "Already Registered ? ",
+                          style: GoogleFonts.exo2(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                      ),
+                    )
                   ],
                 ))
               ],

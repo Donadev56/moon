@@ -1,22 +1,28 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moon/logger/logger.dart';
+import 'package:moon/widget/colors_dialog.dart';
 
 typedef ChangeModelType = void Function(String model);
+typedef ChangeColor = void Function(String color);
 
 class TopBar extends StatelessWidget implements PreferredSizeWidget {
   final Color primaryColor;
   final Color secondaryColor;
   final String address;
+  final String path;
+  final ChangeColor changeColor;
 
   const TopBar({
     super.key,
+    required this.path,
     required this.primaryColor,
     required this.secondaryColor,
     required this.address,
+    required this.changeColor,
   });
 
   @override
@@ -29,9 +35,12 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       leading: IconButton(
         onPressed: () {
-          Scaffold.of(context).openDrawer();
+          context.go(path);
         },
-        icon: Icon(FeatherIcons.alignLeft),
+        icon: Icon(
+          Icons.arrow_back,
+          color: Colors.white.withOpacity(0.5),
+        ),
         color: secondaryColor,
       ),
       title: Row(
@@ -90,10 +99,17 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
         PopupMenuButton(
-          color: Colors.pinkAccent,
+          color: Color(0XFF353535),
           icon: Icon(CupertinoIcons.ellipsis_vertical),
           iconColor: secondaryColor,
-          onSelected: (value) async {},
+          onSelected: (value) async {
+            if (value == "color") {
+              showDropdownDialog(
+                  context,
+                  [Colors.orange, Colors.blue, Colors.greenAccent],
+                  changeColor);
+            }
+          },
           itemBuilder: (BuildContext context) => const [
             PopupMenuItem(
               value: 'logout',
@@ -108,6 +124,24 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   Text(
                     'Logout',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'color',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.color_lens,
+                    color: Colors.white,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text(
+                    'Change color',
                     style: TextStyle(color: Colors.white),
                   ),
                 ],

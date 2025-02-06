@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+typedef OnPreviewTap = void Function();
+
 class ProgramWidjet extends StatelessWidget {
   final Color color;
   final String name;
-  final int amount;
+  final double amount;
   final int level;
   final String imageString;
+  final OnPreviewTap onPreviewTap;
 
   const ProgramWidjet({
     super.key,
@@ -15,6 +18,7 @@ class ProgramWidjet extends StatelessWidget {
     required this.name,
     required this.amount,
     required this.level,
+    required this.onPreviewTap,
   });
 
   @override
@@ -77,8 +81,8 @@ class ProgramWidjet extends StatelessWidget {
                     decoration: BoxDecoration(
                         color: index < level ? color : Color(0XFF353535),
                         borderRadius: BorderRadius.circular(10)),
-                    width: 37,
-                    height: 37,
+                    width: 34,
+                    height: 34,
                   );
                 }),
               ),
@@ -91,7 +95,9 @@ class ProgramWidjet extends StatelessWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(15),
-                    onTap: () {},
+                    onTap: () {
+                      onPreviewTap();
+                    },
                     child: SizedBox(
                         width: 170,
                         child: Container(

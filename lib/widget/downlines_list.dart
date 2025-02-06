@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:moon/logger/logger.dart';
 import 'package:moon/types/types.dart';
 
-class EventsWidget extends StatelessWidget {
-  final List<ContractEvents> events;
-  const EventsWidget({super.key, required this.events});
+class DownlinesListWidget extends StatelessWidget {
+  final List<DownlinesData> downlines;
+  const DownlinesListWidget({super.key, required this.downlines});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,7 @@ class EventsWidget extends StatelessWidget {
         decoration: BoxDecoration(
             border: Border(
                 top: BorderSide(
-              color: Colors.greenAccent,
+              color: Colors.transparent,
               width: 1,
             )),
             borderRadius: BorderRadius.circular(20),
@@ -26,9 +27,9 @@ class EventsWidget extends StatelessWidget {
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: 300, minHeight: 100),
               child: ListView.builder(
-                itemCount: events.length,
+                itemCount: downlines.length,
                 itemBuilder: (BuildContext context, int index) {
-                  final event = events[index];
+                  final event = downlines[index];
                   return Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     decoration: BoxDecoration(
@@ -91,7 +92,7 @@ class EventsWidget extends StatelessWidget {
             ),
             Container(
               margin: const EdgeInsets.all(10),
-              width: width * 0.75,
+              width: width * 0.65,
               height: 40,
               decoration: BoxDecoration(
                 color: Color(0XFF434343),
@@ -102,6 +103,7 @@ class EventsWidget extends StatelessWidget {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
                   onTap: () {
+                    context.go("/dashboard");
                     log("See all events clicked");
                   },
                   child: Container(
@@ -113,14 +115,14 @@ class EventsWidget extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.remove_red_eye,
+                              Icons.dashboard,
                               color: Colors.white,
                             ),
                             SizedBox(
                               width: 10,
                             ),
                             Text(
-                              "See all events",
+                              "Go to Dashboard",
                               style: GoogleFonts.exo(color: Colors.white),
                             ),
                           ],

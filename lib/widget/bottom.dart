@@ -4,11 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
+  final Color primaryColor;
 
   const BottomNav({
     Key? key,
     required this.currentIndex,
     this.onTap,
+    required this.primaryColor,
   }) : super(key: key);
 
   @override
@@ -27,7 +29,7 @@ class BottomNav extends StatelessWidget {
       currentIndex: currentIndex,
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.orange,
+      selectedItemColor: primaryColor,
       unselectedItemColor: Colors.white,
       selectedLabelStyle: GoogleFonts.exo2(fontSize: 12),
       unselectedLabelStyle: GoogleFonts.exo2(),
@@ -43,10 +45,10 @@ class BottomNav extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isSelected
-                  ? Colors.orange.withOpacity(0.2)
+                  ? primaryColor.withOpacity(0.2)
                   : Colors.transparent,
               border: Border.all(
-                color: isSelected ? Colors.orange : Colors.transparent,
+                color: isSelected ? primaryColor : Colors.transparent,
                 width: 2,
               ),
             ),

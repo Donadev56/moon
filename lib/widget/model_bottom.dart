@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 void showModelBottomSheet(BuildContext context, String amount,
     String actionName, String termes, String to, VoidCallback onContinue) {
-  final width = MediaQuery.of(context).size.width;
   final height = MediaQuery.of(context).size.height;
 
   showModalBottomSheet(

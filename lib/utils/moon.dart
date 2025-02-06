@@ -3,24 +3,31 @@ import 'package:moon/logger/logger.dart';
 import 'dart:js_interop';
 
 @JS()
-external JSPromise RegisterUser(String sponsorId, String username);
+external JSPromise PurchaseLevel(int level);
 @JS()
 external JSPromise IsRegistered(String userAddress);
 @JS()
-external JSPromise getUserData(String userAddress);
+external JSPromise getUserM50Data(String userAddress);
 @JS()
-external JSPromise AddressById(int id);
+external JSPromise Withdraw();
 @JS()
-external JSPromise getContractEvents();
-@JS()
-external JSPromise getUserTeamData(String userAddress);
-@JS()
-external JSPromise NumberOfUsers();
+external JSPromise getMoonContractEvents();
 
-class RegistrationManager {
-  Future<bool> register(String sponsor, String name) async {
+@JS()
+external JSPromise getTotalEarned();
+@JS()
+external JSPromise getUserLevel(String addr);
+@JS()
+external JSPromise GetAvailableGlobalGain(String address);
+@JS()
+external JSPromise GetUserHistories();
+@JS()
+external JSPromise GetUserWithdraw();
+
+class MoonContractManager {
+  Future<bool> purchase(int level) async {
     try {
-      final resultPromise = RegisterUser(sponsor, name);
+      final resultPromise = PurchaseLevel(level);
 
       final network = await ethereum!.getChainId();
       if (network != 204) {
@@ -40,10 +47,10 @@ class RegistrationManager {
 
       final resultDart = await resultPromise.toDart;
       if (resultDart.toString() == "false") {
-        log('Registration failed');
+        log('purchase failed');
         return false;
       } else {
-        log('Registration successful');
+        log('purchase successful');
         return true;
       }
     } catch (e) {
@@ -65,7 +72,7 @@ class RegistrationManager {
 
   Future<Map<String, dynamic>> getUserInfo(String userAddress) async {
     try {
-      final resultPromise = getUserData(userAddress);
+      final resultPromise = getUserM50Data(userAddress);
       final resultDart = await resultPromise.toDart;
       final converted = dartify(resultDart);
 
@@ -83,9 +90,9 @@ class RegistrationManager {
     }
   }
 
-  Future<String> getSponsorAddress(int id) async {
+  Future<String> withdraw(int id) async {
     try {
-      final resultPromise = AddressById(id);
+      final resultPromise = Withdraw();
       final resultDart = await resultPromise.toDart;
       if (resultDart != null) {
         return resultDart.toString();
@@ -100,7 +107,7 @@ class RegistrationManager {
 
   Future<Map<String, dynamic>> getEvents() async {
     try {
-      final resultPromise = getContractEvents();
+      final resultPromise = getMoonContractEvents();
       final resultDart = await resultPromise.toDart;
       final converted = dartify(resultDart);
 
@@ -112,9 +119,9 @@ class RegistrationManager {
     }
   }
 
-  Future<Map<String, dynamic>> getUserTeam(String userAddress) async {
+  Future<Map<String, dynamic>> getHistories() async {
     try {
-      final resultPromise = getUserTeamData(userAddress);
+      final resultPromise = GetUserHistories();
       final resultDart = await resultPromise.toDart;
       final converted = dartify(resultDart);
 
@@ -126,10 +133,49 @@ class RegistrationManager {
     }
   }
 
-  Future<int> getNumberOfUsers() async {
+  Future<Map<String, dynamic>> getWithdrawals() async {
     try {
-      final resultPromise = NumberOfUsers();
+      final resultPromise = GetUserWithdraw();
       final resultDart = await resultPromise.toDart;
+      final converted = dartify(resultDart);
+
+      final jsonRes = (converted);
+      return jsonRes;
+    } catch (e) {
+      logError(e.toString());
+      return {};
+    }
+  }
+
+  Future<int> getTotalEarnings() async {
+    try {
+      final resultPromise = getTotalEarned();
+      final resultDart = await resultPromise.toDart;
+      log("earned dart result ${resultDart.toString()}");
+      return resultDart as int;
+    } catch (e) {
+      logError(e.toString());
+      return 0;
+    }
+  }
+
+  Future<int> getUserLevelInM50(String address) async {
+    try {
+      final resultPromise = getUserLevel(address);
+      final resultDart = await resultPromise.toDart;
+      log("Level result ${resultDart.toString()}");
+      return int.parse(resultDart as String);
+    } catch (e) {
+      logError(e.toString());
+      return 0;
+    }
+  }
+
+  Future<int> checkAvailableAmount(String address) async {
+    try {
+      final resultPromise = GetAvailableGlobalGain(address);
+      final resultDart = await resultPromise.toDart;
+      log("earned dart result ${resultDart.toString()}");
       return resultDart as int;
     } catch (e) {
       logError(e.toString());
