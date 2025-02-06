@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moon/logger/logger.dart';
@@ -303,17 +303,19 @@ class _MatrixScreenState extends State<MatrixScreen> {
                           ),
                         ),
                       ),
-                      Container(
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          "$amount BNB",
-                          style: GoogleFonts.audiowide(
-                            color: primaryColor,
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      Skeletonizer(
+                          enabled: isLoading,
+                          child: Container(
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              "$amount BNB",
+                              style: GoogleFonts.audiowide(
+                                color: primaryColor,
+                                fontSize: 25,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )),
                       SizedBox(
                         height: 10,
                       ),
@@ -322,86 +324,89 @@ class _MatrixScreenState extends State<MatrixScreen> {
                       )
                     ],
                   )),
-              Align(
-                alignment: Alignment.center,
-                child: Container(
+              Skeletonizer(
+                enabled: isLoading,
+                child: Align(
                   alignment: Alignment.center,
-                  width: boxSize,
-                  decoration: BoxDecoration(
-                      color: Color(0XFF171717),
-                      borderRadius: BorderRadius.circular(10)),
-                  margin: const EdgeInsets.only(top: 15, right: 15, left: 15),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: () {},
-                      child: Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.all(10),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              child: Image.asset(
-                                "assets/bnb/b3.png",
-                                width: 50,
-                                height: 50,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "$availableGain",
-                                  style: GoogleFonts.audiowide(
-                                      color: Colors.white,
-                                      fontSize: width < 389 ? 14 : 18),
+                  child: Container(
+                    alignment: Alignment.center,
+                    width: boxSize,
+                    decoration: BoxDecoration(
+                        color: Color(0XFF171717),
+                        borderRadius: BorderRadius.circular(10)),
+                    margin: const EdgeInsets.only(top: 15, right: 15, left: 15),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: () {},
+                        child: Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.all(10),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                child: Image.asset(
+                                  "assets/bnb/b3.png",
+                                  width: 50,
+                                  height: 50,
                                 ),
-                                Text("Global Gain",
-                                    style: GoogleFonts.exo(
-                                        color: const Color.fromARGB(
-                                            142, 255, 255, 255),
-                                        fontSize: 16))
-                              ],
-                            ),
-                            Spacer(),
-                            SizedBox(
-                              width: width * 0.27,
-                              height: 38,
-                              child: ElevatedButton(
-                                  onPressed: () {
-                                    log("Taped");
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "$availableGain",
+                                    style: GoogleFonts.audiowide(
+                                        color: Colors.white,
+                                        fontSize: width < 389 ? 14 : 18),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        "Take Gift",
-                                        style: GoogleFonts.exo2(
-                                          fontSize: width < 389 ? 13 : 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                        ),
+                                  Text("Global Gain",
+                                      style: GoogleFonts.exo(
+                                          color: const Color.fromARGB(
+                                              142, 255, 255, 255),
+                                          fontSize: 16))
+                                ],
+                              ),
+                              Spacer(),
+                              SizedBox(
+                                width: width * 0.27,
+                                height: 38,
+                                child: ElevatedButton(
+                                    onPressed: () {
+                                      context.go("/withdraw");
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
-                                      Spacer(),
-                                      Icon(
-                                        LucideIcons.gift,
-                                        color: Colors.black,
-                                      )
-                                    ],
-                                  )),
-                            ),
-                          ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          "Take Gift",
+                                          style: GoogleFonts.exo2(
+                                            fontSize: width < 389 ? 13 : 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        Spacer(),
+                                        Icon(
+                                          LucideIcons.gift,
+                                          color: Colors.black,
+                                        )
+                                      ],
+                                    )),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -432,117 +437,120 @@ class _MatrixScreenState extends State<MatrixScreen> {
                   alignment: WrapAlignment.center,
                   children: List.generate(12, (index) {
                     final bool isOpen = index < level;
-                    return Container(
-                      width: 200,
-                      height: 200,
-                      margin: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Color(0XFF212121),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        children: [
-                          Container(
-                            height: 50,
-                            decoration: BoxDecoration(
-                                color: Color(0XFF353535),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                  topRight: Radius.circular(10),
-                                )),
-                            child: Row(
-                              children: [
-                                Container(
-                                  margin: const EdgeInsets.only(left: 10),
-                                  child: Image.asset(
-                                    "assets/bnb/b3.png",
-                                    width: 30,
-                                    height: 30,
-                                  ),
-                                ),
-                                Spacer(),
-                                Container(
-                                  margin: const EdgeInsets.only(right: 10),
-                                  child: Text(
-                                    "${levels.isNotEmpty ? levels[index] : 0} BNB",
-                                    style: GoogleFonts.roboto(
-                                        color: Colors.white,
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                )
-                              ],
-                            ),
+                    return Skeletonizer(
+                        enabled: isLoading,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          margin: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Color(0XFF212121),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          SizedBox(
-                            height: 15,
-                          ),
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(30),
-                              onTap: () {
-                                purchase(index, isOpen);
-                              },
-                              child: isPurchasing && index + 1 == level + 1
-                                  ? Container(
-                                      margin: const EdgeInsets.all(20),
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : Container(
-                                      child: Icon(
-                                        isOpen
-                                            ? LucideIcons.toggleRight
-                                            : LucideIcons.toggleLeft,
-                                        color: isOpen
-                                            ? Colors.greenAccent
-                                            : Colors.orange,
-                                        size: 80,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          Container(
-                            padding: const EdgeInsets.only(left: 10, right: 10),
-                            height: 38,
-                            child: ElevatedButton(
-                                onPressed: () {
-                                  purchase(index, isOpen);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Color(0XFF353535),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
+                          child: Column(
+                            children: [
+                              Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                    color: Color(0XFF353535),
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10),
+                                    )),
                                 child: Row(
                                   children: [
-                                    Text(
-                                      isOpen ? "Working" : "Purchase",
-                                      style: GoogleFonts.exo2(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange,
+                                    Container(
+                                      margin: const EdgeInsets.only(left: 10),
+                                      child: Image.asset(
+                                        "assets/bnb/b3.png",
+                                        width: 30,
+                                        height: 30,
                                       ),
                                     ),
                                     Spacer(),
-                                    Icon(
-                                      isOpen
-                                          ? Icons.check_circle
-                                          : LucideIcons.shoppingCart,
-                                      color: Colors.orange,
+                                    Container(
+                                      margin: const EdgeInsets.only(right: 10),
+                                      child: Text(
+                                        "${levels.isNotEmpty ? levels[index] : 0} BNB",
+                                        style: GoogleFonts.roboto(
+                                            color: Colors.white,
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold),
+                                      ),
                                     )
                                   ],
-                                )),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 15,
+                              ),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(30),
+                                  onTap: () {
+                                    purchase(index, isOpen);
+                                  },
+                                  child: isPurchasing && index + 1 == level + 1
+                                      ? Container(
+                                          margin: const EdgeInsets.all(20),
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Container(
+                                          child: Icon(
+                                            isOpen
+                                                ? LucideIcons.toggleRight
+                                                : LucideIcons.toggleLeft,
+                                            color: isOpen
+                                                ? Colors.greenAccent
+                                                : Colors.orange,
+                                            size: 80,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 5,
+                              ),
+                              Container(
+                                padding:
+                                    const EdgeInsets.only(left: 10, right: 10),
+                                height: 38,
+                                child: ElevatedButton(
+                                    onPressed: () {
+                                      purchase(index, isOpen);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0XFF353535),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          isOpen ? "Working" : "Purchase",
+                                          style: GoogleFonts.exo2(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.orange,
+                                          ),
+                                        ),
+                                        Spacer(),
+                                        Icon(
+                                          isOpen
+                                              ? Icons.check_circle
+                                              : LucideIcons.shoppingCart,
+                                          color: Colors.orange,
+                                        )
+                                      ],
+                                    )),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    );
+                        ));
                   }),
                 ),
               )

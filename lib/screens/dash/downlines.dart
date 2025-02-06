@@ -242,6 +242,10 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
             context.go("/dashboard");
           } else if (index == 4) {
             context.go("/profile");
+          } else if (index == 1) {
+            context.go("/earnings");
+          } else if (index == 0) {
+            context.go("/withdraw");
           }
         },
       ),

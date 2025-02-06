@@ -9,7 +9,7 @@ void showModelBottomSheet(BuildContext context, String amount,
       context: context,
       builder: (BuildContext ctx) {
         return Container(
-          height: height * 0.55,
+          height: height * 0.70,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20), topRight: Radius.circular(20)),
@@ -155,7 +155,7 @@ void showModelBottomSheet(BuildContext context, String amount,
                 ),
               ),
               SizedBox(
-                height: 30,
+                height: 20,
               ),
               Container(
                 margin: const EdgeInsets.all(15),

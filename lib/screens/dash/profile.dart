@@ -291,6 +291,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             context.go("/dashboard");
           } else if (index == 3) {
             context.go("/team");
+          } else if (index == 1) {
+            context.go("/earnings");
+          } else if (index == 0) {
+            context.go("/withdraw");
           }
         },
       ),

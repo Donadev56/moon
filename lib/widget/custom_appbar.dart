@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:moon/logger/logger.dart';
 import 'package:moon/widget/colors_dialog.dart';
 
 typedef ChangeModelType = void Function(String model);
@@ -71,7 +71,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
             child: InkWell(
                 borderRadius: BorderRadius.circular(30),
                 onTap: () {
-                  log("taped");
+                  Clipboard.setData(ClipboardData(text: address));
                 },
                 child: Container(
                   padding: const EdgeInsets.all(10),
@@ -86,7 +86,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                       address.isNotEmpty
                           ? Text(
-                              "${address.substring(0, 4)}...${address.substring(0, 4)}",
+                              "${address.substring(0, 4)}...${address.substring(38, address.length)}",
                               style: TextStyle(color: Colors.white),
                             )
                           : Text(

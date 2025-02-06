@@ -3,10 +3,12 @@ import 'package:moon/logger/logger.dart';
 import 'package:moon/screens/auth/auth.dart';
 import 'package:moon/screens/auth/login.dart';
 import 'package:moon/screens/dash/downlines.dart';
+import 'package:moon/screens/dash/earnings.dart';
 import 'package:moon/screens/dash/main.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moon/screens/dash/matrix/matrix.dart';
 import 'package:moon/screens/dash/profile.dart';
+import 'package:moon/screens/dash/withdraw.dart';
 
 void main() {
   runApp(const MyApp());
@@ -66,6 +68,18 @@ final GoRouter _router = GoRouter(
           path: '/preview',
           builder: (BuildContext context, GoRouterState state) {
             return const MatrixScreen();
+          },
+        ),
+        GoRoute(
+          path: '/earnings',
+          builder: (BuildContext context, GoRouterState state) {
+            return const Earnings();
+          },
+        ),
+        GoRoute(
+          path: '/withdraw',
+          builder: (BuildContext context, GoRouterState state) {
+            return const Withdraw();
           },
         ),
       ],
