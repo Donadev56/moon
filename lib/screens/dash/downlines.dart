@@ -33,7 +33,7 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
   int userId = 0;
   int joiningDate = 0;
   int totalUsers = 0;
-  Color primaryColor = Colors.greenAccent;
+  Color primaryColor = Colors.orange;
   Map<String, dynamic> teamData = {};
 
   Map<String, dynamic> userData = {};

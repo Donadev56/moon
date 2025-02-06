@@ -38,7 +38,7 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   int joiningDate = 0;
 
   int totalUsers = 0;
-  Color primaryColor = Colors.greenAccent;
+  Color primaryColor = Colors.orange;
   Map<String, dynamic> teamData = {};
   Map<String, dynamic> moonData = {};
 
@@ -55,6 +55,7 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
 
     getUserAddress();
     getEvents();
+    getMoonEvents();
     getUsersCount();
   }
 
@@ -151,6 +152,35 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
       logError(e.toString());
     }
   }
+
+    Future<void> getMoonEvents() async {
+    try {
+      log("getting events...");
+      final regManager = MoonContractManager();
+      final result = await regManager.getEvents();
+      if (result.isNotEmpty) {
+        setState(() {
+          log(result.toString());
+          final contractEvents = result["events"];
+          for (final event in json.decode(contractEvents).reversed.toList()) {
+            events.add(
+              ContractEvents(
+                icon: FeatherIcons.user,
+                id: (event["id"]).toString(),
+                name: event["name"],
+                iconColor: Colors.greenAccent,
+                time:
+                    '${(minutesElapsed(event["time"])) > 60 ? 60 : (minutesElapsed(event["time"]))} minutes',
+              ),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      logError(e.toString());
+    }
+  }
+
 
   void changeColor(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

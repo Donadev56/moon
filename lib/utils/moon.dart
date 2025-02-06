@@ -175,8 +175,8 @@ class MoonContractManager {
     try {
       final resultPromise = GetAvailableGlobalGain(address);
       final resultDart = await resultPromise.toDart;
-      log("earned dart result ${resultDart.toString()}");
-      return resultDart as int;
+      log("Available gain result ${resultDart.toString()}");
+      return int.parse(resultDart as String) ;
     } catch (e) {
       logError(e.toString());
       return 0;

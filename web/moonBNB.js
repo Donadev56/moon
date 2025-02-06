@@ -133,11 +133,13 @@ window.getUserLevel = async (address )=> {
 window.GetAvailableGlobalGain = async (address )=> {
     try {
         const init = await initMoonWeb3()
+        console.info("Getting available gain of user")
         if (init.success) {
            if (typeof init.response !== "string") {
              const contract = init.response.vrContractInstance
  
              const gain = Number(await contract.methods.availableGlobalGain(address).call())
+             console.info("Got gain " + gain )
              return gain.toString()
             } else {
  

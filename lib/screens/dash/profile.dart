@@ -21,7 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String name = "";
   bool isLoading = true;
 
-  Color primaryColor = Colors.greenAccent;
+  Color primaryColor = Colors.orange;
   Map<String, dynamic> teamData = {};
   Map<String, dynamic> userData = {};
   String userAddress = "";
