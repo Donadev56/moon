@@ -153,7 +153,7 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
     }
   }
 
-    Future<void> getMoonEvents() async {
+  Future<void> getMoonEvents() async {
     try {
       log("getting events...");
       final regManager = MoonContractManager();
@@ -180,7 +180,6 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
       logError(e.toString());
     }
   }
-
 
   void changeColor(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

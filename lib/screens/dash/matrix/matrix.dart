@@ -29,7 +29,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
   bool isLoading = true;
   int userId = 0;
   int joiningDate = 0;
-  double availableGain  = 0;
+  double availableGain = 0;
   bool isPurchasing = false;
 
   Color primaryColor = Colors.orange;
@@ -47,7 +47,8 @@ class _MatrixScreenState extends State<MatrixScreen> {
     getColor();
     getUserAddress();
   }
-  Future<void> getAvailableGain (addr)  async{
+
+  Future<void> getAvailableGain(addr) async {
     try {
       final manager = MoonContractManager();
       final result = await manager.checkAvailableAmount(addr);
@@ -56,15 +57,13 @@ class _MatrixScreenState extends State<MatrixScreen> {
         setState(() {
           log(json.encode(result).toString());
           availableGain = result / 1e18;
-       
         });
       }
-      
     } catch (e) {
       logError(e.toString());
-      
     }
   }
+
   Future<void> getUserMoonData(String addr) async {
     try {
       final manager = MoonContractManager();
@@ -173,8 +172,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
           getUserTeamData(userAddress);
           getUserLvl(userAddress);
           getUserMoonData(userAddress);
-              getAvailableGain(userAddress);
-
+          getAvailableGain(userAddress);
         });
       }
     } catch (e) {
@@ -212,11 +210,10 @@ class _MatrixScreenState extends State<MatrixScreen> {
 
   Future<void> purchase(index, isOpen) async {
     try {
-
-    final lvl = index + 1;
+      final lvl = index + 1;
 
       if (lvl > level + 1) {
-        log("$lvl and $level" );
+        log("$lvl and $level");
         showCustomSnackBar(
             context: context,
             message: "Previous level not activated",
@@ -236,40 +233,35 @@ class _MatrixScreenState extends State<MatrixScreen> {
           "Level Purchase",
           "By purchasing the level ${index + 1} at ${levels[index]} BNB, you accept the terms and conditions of work of moon Bnb and are aware of its operation.",
           "0xeA292baCc8801728152b3273161a8800E07Fc57C", () async {
+        Navigator.pop(context);
+        setState(() {
+          isPurchasing = true;
+        });
 
-
-      Navigator.pop(context);
-      setState(() {
-        isPurchasing = true ;
-      });
-
-      final manager = MoonContractManager();
-      final result = await manager.purchase(lvl);
-      if (result) {
+        final manager = MoonContractManager();
+        final result = await manager.purchase(lvl);
+        if (result) {
           setState(() {
-              level = lvl;
-              isPurchasing = false;
-            });
-        if (!mounted) return ;
-        showCustomSnackBar(
-            context: context,
-            message: "Level Purchased Successfully",
-            iconColor: Colors.greenAccent);
-          
-      } else {
-
+            level = lvl;
+            isPurchasing = false;
+          });
+          if (!mounted) return;
+          showCustomSnackBar(
+              context: context,
+              message: "Level Purchased Successfully",
+              iconColor: Colors.greenAccent);
+        } else {
           setState(() {
-        isPurchasing = false;
+            isPurchasing = false;
+          });
+          if (!mounted) return;
+
+          showCustomSnackBar(
+              context: context,
+              message: "Failed to Purchase Level",
+              iconColor: Colors.pinkAccent);
+        }
       });
-    if (!mounted) return ;
-
-        showCustomSnackBar(
-            context: context,
-            message: "Failed to Purchase Level",
-            iconColor: Colors.pinkAccent);
-      }      });
-
-
     } catch (e) {
       logError(e.toString());
       setState(() {
@@ -277,7 +269,6 @@ class _MatrixScreenState extends State<MatrixScreen> {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -493,21 +484,24 @@ class _MatrixScreenState extends State<MatrixScreen> {
                               onTap: () {
                                 purchase(index, isOpen);
                               },
-                              child: isPurchasing && index + 1 == level + 1 ? Container(
-                                margin: const EdgeInsets.all(20),
-                                child:CircularProgressIndicator(
-                                  color: Colors.white, )  ,
-                              )  : Container(
-                                child: Icon(
-                                  isOpen
-                                      ? LucideIcons.toggleRight
-                                      : LucideIcons.toggleLeft,
-                                  color: isOpen
-                                      ? Colors.greenAccent
-                                      : Colors.orange,
-                                  size: 80,
-                                ),
-                              ),
+                              child: isPurchasing && index + 1 == level + 1
+                                  ? Container(
+                                      margin: const EdgeInsets.all(20),
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Container(
+                                      child: Icon(
+                                        isOpen
+                                            ? LucideIcons.toggleRight
+                                            : LucideIcons.toggleLeft,
+                                        color: isOpen
+                                            ? Colors.greenAccent
+                                            : Colors.orange,
+                                        size: 80,
+                                      ),
+                                    ),
                             ),
                           ),
                           SizedBox(
