@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_web/image_picker_web.dart';
 import 'package:moon/logger/logger.dart';
 import 'package:moon/utils/ethereum.dart';
 import 'package:moon/widget/bottom.dart';
@@ -21,11 +27,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String name = "";
   bool isLoading = true;
 
+  Uint8List? userImage  ;
+  String link = "https://moonbnb.pro/#/register?ref=";
+  String defaultImage = "https://moonbnb.pro/a.webp";
+  Uint8List? byteImage ;
+  bool isByteImageAvailable = false;
+
   Color primaryColor = Colors.orange;
   Map<String, dynamic> teamData = {};
   Map<String, dynamic> userData = {};
   String userAddress = "";
   int index = 4;
+  bool isUserLoading = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -46,6 +59,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+Future<void> getCurrentImage (addr) async {
+  try {
+    final url = Uri.parse("https://chat.sauraya.com/moon/getImage/$addr");
+    final usrDataUrl = Uri.parse("https://chat.sauraya.com/moon/getUserData/$addr");
+    final response = await http.get(url);
+    final usrResponse = await http.get(usrDataUrl);
+
+    if (response.statusCode == 200) {
+    final bytes = base64Decode(response.body.split(',').last);
+    setState(() {
+      byteImage = bytes;
+      userImage = bytes;
+      isByteImageAvailable = true;
+    });
+
+    }
+    if (usrResponse.statusCode == 200) {
+      final usrData = json.decode(usrResponse.body);
+      setState(() {
+        _nameController.text = usrData["name"];
+        _emailController.text = usrData["email"];
+        _phoneController.text = usrData["phone"];
+        
+      });
+    }
+  } catch (e) {
+    logError(e.toString());
+    
+  }
+}
   void getColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final value = prefs.getString('color');
@@ -77,6 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         log("address : $address");
         setState(() {
           userAddress = address;
+          getCurrentImage(address);
           // Optionally, you can load user data here.
           isLoading = false;
         });
@@ -90,21 +134,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Called when the user taps the submit button.
-  void _submitProfile() {
-    if (_formKey.currentState!.validate()) {
-      // Process profile update.
-      log("Name: ${_nameController.text}");
-      log("Email: ${_emailController.text}");
-      log("Phone: ${_phoneController.text}");
-      // Here you could call an API to update the user profile.
-      // After successful submission, you may want to show a confirmation or navigate.
-      showCustomSnackBar(
+  void _submitProfile() async {
+    if (_formKey.currentState!.validate() || userImage == null) {
+    String b64 = base64Encode(userImage!);
+      log("Image converted to base64: $b64");
+      final request = {
+        "image": 'data:image/png;base64,$b64',
+        "address" : userAddress,
+        "email" : _emailController.text,
+        "phone" : _phoneController.text ,
+        "name" : _nameController.text,
+      };
+      final response = await http.post(Uri.parse("https://chat.sauraya.com/moon/update"),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode(request),
+      
+      );
+
+      if (response.statusCode == 200) {
+        log("Image updated successfully");
+        if (!mounted) return ;
+        showCustomSnackBar(
           context: context,
-          message: "Profile updated successfully",
+          message: "Image updated successfully",
           iconColor: Colors.greenAccent,
           icon: Icons.check_circle);
-    }
+       }
+  } else {
+    showCustomSnackBar(
+      context: context,
+      message: "Please fill all the required fields",
+      iconColor: Colors.red,
+      icon: Icons.error);
   }
+  }
+Future<void> getImage () async{
+  try {
+
+Uint8List? bytesFromPicker = await ImagePickerWeb.getImageAsBytes();
+
+    if (bytesFromPicker != null) {
+      log("File retrieved");
+      setState(() {
+        
+        userImage = bytesFromPicker;
+      });
+   
+     }
+  } catch (e) {
+    logError("Error getting image: $e");
+    return;
+    
+  }
+}
 
   @override
   void dispose() {
@@ -155,19 +239,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Stack(
                           alignment: Alignment.center,
                           children: [
-                            Container(
+                           InkWell(
+                            onTap: ()async{
+                             await getImage();
+                            },
+                            child:  Container(
                               width: 120,
                               height: 120,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                image: const DecorationImage(
-                                  image: AssetImage("assets/image/a.webp"),
+                                image:  DecorationImage(
+                                  image: userImage != null ?  MemoryImage(userImage!)  : AssetImage("assets/image/a.webp"),
                                   fit: BoxFit.cover,
                                 ),
                                 border:
                                     Border.all(color: primaryColor, width: 3),
                               ),
-                            ),
+                            ), 
+                           ),
                             Positioned(
                               bottom: 0,
                               right: 0,

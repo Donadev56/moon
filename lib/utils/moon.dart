@@ -2,7 +2,6 @@ import 'package:flutter_web3/flutter_web3.dart';
 import 'package:moon/logger/logger.dart';
 import 'dart:js_interop';
 
-
 @JS()
 external JSPromise PurchaseLevel(int level);
 @JS()

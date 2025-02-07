@@ -18,6 +18,7 @@ import 'package:moon/widget/program.dart';
 import 'package:moon/widget/snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:http/http.dart' as http;
 
 class DashBoardScreen extends StatefulWidget {
   const DashBoardScreen({
@@ -32,7 +33,10 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   int level = 0;
   double amount = 0;
   String name = "";
-  String link = "https://moonbnb.app/#/register?ref=";
+  String link = "https://moonbnb.pro/#/register?ref=";
+  String defaultImage = "https://moonbnb.pro/a.webp";
+  Uint8List? byteImage ;
+  bool isByteImageAvailable = false;
   bool isLoading = true;
   int userId = 0;
   int joiningDate = 0;
@@ -224,6 +228,7 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
           getUserTeamData(userAddress);
           getUserLvl(userAddress);
           getUserMoonData(userAddress);
+          getCurrentImage(userAddress);
         });
       }
     } catch (e) {
@@ -273,7 +278,33 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
 
     return difference.inMinutes;
   }
+Future<void> getCurrentImage (addr) async {
+  try {
+    final url = Uri.parse("https://chat.sauraya.com/moon/getImage/$addr");
+    final usrDataUrl = Uri.parse("https://chat.sauraya.com/moon/getUserData/$addr");
+    final response = await http.get(url);
+    final usrResponse = await http.get(usrDataUrl);
 
+    if (response.statusCode == 200) {
+    final bytes = base64Decode(response.body.split(',').last);
+    setState(() {
+      byteImage = bytes;
+      isByteImageAvailable = true;
+    });
+
+    }
+    if (usrResponse.statusCode == 200) {
+      final usrData = json.decode(usrResponse.body);
+      setState(() {
+        name = usrData["name"];
+        log("Name :$name");
+      });
+    }
+  } catch (e) {
+    logError(e.toString());
+    
+  }
+}
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
@@ -313,8 +344,9 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(15),
-                            child: Image.asset(
-                              "assets/image/a.webp",
+                            child: isByteImageAvailable ? Image.memory(byteImage!, width: 120 , height: 120 ,
+                            fit: BoxFit.cover,)  : Image.asset(
+                             "assets/image/a.webp",
                               width: 120,
                               height: 120,
                               fit: BoxFit.cover,
