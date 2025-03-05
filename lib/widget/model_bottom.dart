@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moon/types/types.dart';
 
-void showModelBottomSheet(BuildContext context, String amount,
-    String actionName, String termes, String to, VoidCallback onContinue) {
+void showModelBottomSheet(
+    {required BuildContext context,
+    required String amount,
+    required AppColors colors,
+    required String actionName,
+    required String termes,
+    required String to,
+    required VoidCallback onContinue}) {
   final height = MediaQuery.of(context).size.height;
 
   showModalBottomSheet(
@@ -17,12 +24,12 @@ void showModelBottomSheet(BuildContext context, String amount,
                 borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20)),
-                color: Color(0XFF212121)),
+                color: colors.secondaryColor),
             child: Column(
               children: [
                 Container(
                   decoration: BoxDecoration(
-                      color: Color(0XFF171717),
+                      color: colors.grayColor,
                       borderRadius: BorderRadius.circular(10)),
                   margin: const EdgeInsets.only(top: 15, right: 15, left: 15),
                   child: Material(
@@ -53,12 +60,12 @@ void showModelBottomSheet(BuildContext context, String amount,
                                 Text(
                                   "$amount BNB",
                                   style: GoogleFonts.audiowide(
-                                      color: Colors.white, fontSize: 18),
+                                      color: colors.textColor, fontSize: 18),
                                 ),
                                 Text("op BNB",
                                     style: GoogleFonts.exo(
-                                        color: const Color.fromARGB(
-                                            142, 255, 255, 255),
+                                        color:
+                                            colors.textColor.withOpacity(0.6),
                                         fontSize: 16))
                               ],
                             )
@@ -73,7 +80,7 @@ void showModelBottomSheet(BuildContext context, String amount,
                 ),
                 Container(
                   decoration: BoxDecoration(
-                      color: Color(0XFF171717),
+                      color: colors.grayColor,
                       borderRadius: BorderRadius.circular(10)),
                   margin: const EdgeInsets.only(left: 15, right: 15, top: 5),
                   child: Material(
@@ -92,7 +99,7 @@ void showModelBottomSheet(BuildContext context, String amount,
                             Text(
                               actionName,
                               style: GoogleFonts.audiowide(
-                                  color: Colors.white, fontSize: 17),
+                                  color: colors.textColor, fontSize: 17),
                             ),
                             SizedBox(
                               height: 5,
@@ -101,7 +108,8 @@ void showModelBottomSheet(BuildContext context, String amount,
                               children: [
                                 Text("To",
                                     style: GoogleFonts.exo(
-                                        color: Colors.white.withOpacity(0.4),
+                                        color:
+                                            colors.textColor.withOpacity(0.4),
                                         fontSize: 12)),
                                 SizedBox(
                                   width: 5,
@@ -109,7 +117,8 @@ void showModelBottomSheet(BuildContext context, String amount,
                                 Text(
                                     "${to.substring(0, 4)}...${to.substring(0, 4)}",
                                     style: GoogleFonts.exo(
-                                        color: Colors.white.withOpacity(0.4),
+                                        color:
+                                            colors.textColor.withOpacity(0.4),
                                         fontSize: 12)),
                               ],
                             )
@@ -124,7 +133,7 @@ void showModelBottomSheet(BuildContext context, String amount,
                 ),
                 Container(
                   decoration: BoxDecoration(
-                      color: Color(0XFF171717),
+                      color: colors.grayColor,
                       borderRadius: BorderRadius.circular(10)),
                   margin: const EdgeInsets.only(left: 15, right: 15, top: 5),
                   child: Material(
@@ -143,14 +152,14 @@ void showModelBottomSheet(BuildContext context, String amount,
                             Text(
                               "Terms and conditions",
                               style: GoogleFonts.audiowide(
-                                  color: Colors.white, fontSize: 17),
+                                  color: colors.textColor, fontSize: 17),
                             ),
                             SizedBox(
                               height: 5,
                             ),
                             Text(termes,
                                 style: GoogleFonts.exo(
-                                    color: Colors.white.withOpacity(0.4),
+                                    color: colors.textColor.withOpacity(0.4),
                                     fontSize: 12)),
                           ],
                         ),
@@ -207,12 +216,12 @@ void showModelBottomSheet(BuildContext context, String amount,
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(30),
-                                  color: Colors.white),
+                                  color: colors.textColor),
                               child: Center(
                                 child: Text(
                                   "Continue",
-                                  style:
-                                      GoogleFonts.exo(color: Color(0XFF0D0D0D)),
+                                  style: GoogleFonts.exo(
+                                      color: colors.primaryColor),
                                 ),
                               ),
                             ),

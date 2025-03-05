@@ -2,15 +2,20 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moon/languages/languages.dart';
 import 'package:moon/logger/logger.dart';
 import 'package:moon/types/types.dart';
+import 'package:moon/utils/colors.dart';
 import 'package:moon/utils/ethereum.dart';
 import 'package:moon/utils/register.dart';
+import 'package:moon/utils/themes.dart';
 import 'package:moon/widget/bottom.dart';
 import 'package:moon/widget/custom_appbar.dart';
 import 'package:moon/widget/downlines_list.dart';
+import 'package:moon/widget/page_manager_app_bar.dart';
 import 'package:moon/widget/profit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -35,11 +40,38 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
   int totalUsers = 0;
   Color primaryColor = Colors.orange;
   Map<String, dynamic> teamData = {};
+  bool isPreviewMode = false;
 
   Map<String, dynamic> userData = {};
 
   String userAddress = "";
   int index = 3;
+
+  AppColors colors = AppColors(
+      primaryColor: Color(0XFF0D0D0D),
+      themeColor: Colors.greenAccent,
+      greenColor: Colors.greenAccent,
+      secondaryColor: Color(0XFF121212),
+      grayColor: Color(0XFF353535),
+      textColor: Colors.white,
+      redColor: Colors.pinkAccent);
+  Themes themes = Themes();
+  String savedThemeName = "";
+  Future<void> getSavedTheme() async {
+    try {
+      final manager = ColorsManager();
+      final savedName = await manager.getThemeName();
+      setState(() {
+        savedThemeName = savedName ?? "";
+      });
+      final savedTheme = await manager.getDefaultTheme();
+      setState(() {
+        colors = savedTheme;
+      });
+    } catch (e) {
+      logError(e.toString());
+    }
+  }
 
   void changeColor(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -55,24 +87,10 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
     });
   }
 
-  void getColor() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString('color');
-    setState(() {
-      if (value == "orange") {
-        primaryColor = Colors.orange;
-      } else if (value == "blue") {
-        primaryColor = Colors.blue;
-      } else if (value == "green") {
-        primaryColor = Colors.greenAccent;
-      }
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    getColor();
+    getSavedTheme();
     getUserAddress();
   }
 
@@ -124,7 +142,7 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
               name: name,
               time: "${inDays(time)} Days",
               id: id.toString(),
-              iconColor: Colors.greenAccent);
+              iconColor: colors.themeColor);
           setState(() {
             downlines.add(newUser);
           });
@@ -178,13 +196,15 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
     double boxSize = width * 0.85;
 
     return Scaffold(
-      backgroundColor: Color(0XFF0D0D0D),
-      appBar: TopBar(
+      backgroundColor: colors.primaryColor,
+      appBar: PageManagerTopBar(
+        colors: colors,
+        isPreviewMode: isPreviewMode,
         path: "/dashboard",
         changeColor: changeColor,
         address: userAddress,
-        primaryColor: Color(0XFF0D0D0D),
-        secondaryColor: Colors.white,
+        primaryColor: colors.primaryColor,
+        secondaryColor: colors.textColor,
       ),
       body: SingleChildScrollView(
         child: Skeletonizer(
@@ -201,8 +221,9 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         ProfitWidget(
+                            colors: colors,
                             imageUrl: "assets/image/32.png",
-                            title: "Total Direct",
+                            title: AppLocale.totalDirectText.getString(context),
                             totalAmount:
                                 "${teamData["directDownlinesCount"] ?? 0}",
                             dailyAmount: "0"),
@@ -210,8 +231,9 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
                           width: width * 0.02,
                         ),
                         ProfitWidget(
+                            colors: colors,
                             imageUrl: "assets/image/31.png",
-                            title: "Total Team",
+                            title: AppLocale.totalTeamText.getString(context),
                             totalAmount: "${teamData["teamSize"] ?? 0}",
                             dailyAmount: "0"),
                       ],
@@ -223,31 +245,16 @@ class _DownlinesScreenState extends State<DownlinesScreen> {
                   padding: const EdgeInsets.all(10),
                   margin: const EdgeInsets.only(top: 20, bottom: 10),
                   child: Text(
-                    "Partners",
+                    AppLocale.partnersText.getString(context),
                     style: GoogleFonts.audiowide(
-                        color: Colors.white,
+                        color: colors.textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 30),
                   ),
                 ),
-                DownlinesListWidget(downlines: downlines),
+                DownlinesListWidget(colors: colors, downlines: downlines),
               ],
             )),
-      ),
-      bottomNavigationBar: BottomNav(
-        primaryColor: primaryColor,
-        currentIndex: index,
-        onTap: (index) {
-          if (index == 2) {
-            context.go("/dashboard");
-          } else if (index == 4) {
-            context.go("/profile");
-          } else if (index == 1) {
-            context.go("/earnings");
-          } else if (index == 0) {
-            context.go("/withdraw");
-          }
-        },
       ),
     );
   }

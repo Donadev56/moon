@@ -23,6 +23,8 @@ external JSPromise GetAvailableGlobalGain(String address);
 external JSPromise GetUserHistories(String addr);
 @JS()
 external JSPromise GetUserWithdraw(String addr);
+@JS()
+external JSPromise getPoolUsers(int level);
 
 class MoonContractManager {
   Future<bool> purchase(int level) async {
@@ -199,6 +201,18 @@ class MoonContractManager {
     } catch (e) {
       logError(e.toString());
       return 0;
+    }
+  }
+
+  Future<List<dynamic>> getPoolUserAddresses(int level) async {
+    try {
+      final resultPromise = getPoolUsers(level);
+      final resultDart = await resultPromise.toDart;
+      log("Pool users result ${resultDart.toString()}");
+      return resultDart as List<dynamic>;
+    } catch (e) {
+      logError(e.toString());
+      return [];
     }
   }
 }

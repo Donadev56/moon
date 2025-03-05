@@ -1,16 +1,22 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moon/languages/languages.dart';
 import 'package:moon/logger/logger.dart';
 import 'package:moon/types/types.dart';
+import 'package:moon/utils/colors.dart';
 import 'package:moon/utils/ethereum.dart';
 import 'package:moon/utils/moon.dart';
 import 'package:moon/utils/register.dart';
+import 'package:moon/utils/themes.dart';
 import 'package:moon/widget/bottom.dart';
 import 'package:moon/widget/custom_appbar.dart';
+import 'package:moon/widget/func/show_preview_dialog.dart';
 import 'package:moon/widget/history_list.dart';
+import 'package:moon/widget/page_manager_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Earnings extends StatefulWidget {
@@ -26,16 +32,45 @@ class _EarningsState extends State<Earnings> {
   String name = "";
   String link = "https://moonbnb.app/#/register?ref=";
   bool isLoading = true;
+  bool isPreviewMode = false;
 
   Color primaryColor = Colors.orange;
   List<double> levels = [];
   String userAddress = "";
   int index = 1;
+  AppColors colors = AppColors(
+      primaryColor: Color(0XFF0D0D0D),
+      themeColor: Colors.greenAccent,
+      greenColor: Colors.greenAccent,
+      secondaryColor: Color(0XFF121212),
+      grayColor: Color(0XFF353535),
+      textColor: Colors.white,
+      redColor: Colors.pinkAccent);
+
+  bool saved = false;
+  Themes themes = Themes();
+  String savedThemeName = "";
+  Future<void> getSavedTheme() async {
+    try {
+      final manager = ColorsManager();
+      final savedName = await manager.getThemeName();
+      setState(() {
+        savedThemeName = savedName ?? "";
+      });
+      final savedTheme = await manager.getDefaultTheme();
+      setState(() {
+        colors = savedTheme;
+      });
+    } catch (e) {
+      logError(e.toString());
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     getLevels();
+    getSavedTheme();
 
     getColor();
     getUserAddress();
@@ -114,8 +149,8 @@ class _EarningsState extends State<Earnings> {
         final data = result["response"];
         for (final hist in json.decode(data).reversed.toList()) {
           final name = hist["actionName"];
-          final time = inDays(hist["actionDate"]).toString();
-          final amount = (hist["actionAmount"] / 1e18).toString();
+          final time = inDays(hist["actionDate"]);
+          final amount = (hist["actionAmount"] / 1e18);
           final from = hist["actionFrom"];
           final idResult = await regManager.getUserInfo(from);
           if (idResult.isNotEmpty) {
@@ -156,49 +191,41 @@ class _EarningsState extends State<Earnings> {
     final double width = MediaQuery.of(context).size.width;
     double boxSize = width * 0.9;
     return Scaffold(
-      backgroundColor: Color(0XFF0D0D0D),
-      appBar: TopBar(
+      backgroundColor: colors.primaryColor,
+      appBar: PageManagerTopBar(
+        colors: colors,
+        isPreviewMode: isPreviewMode,
         path: "/dashboard",
         changeColor: changeColor,
         address: userAddress,
-        primaryColor: Color(0XFF0D0D0D),
-        secondaryColor: Colors.white,
+        primaryColor: colors.primaryColor,
+        secondaryColor: colors.textColor,
       ),
-      body: Container(
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: boxSize,
-              padding: const EdgeInsets.all(10),
-              margin: const EdgeInsets.only(top: 20, bottom: 10),
-              child: Text(
-                "Earnings",
-                style: GoogleFonts.audiowide(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 30),
+      body: SingleChildScrollView(
+        child: Container(
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: boxSize,
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.only(top: 20, bottom: 10),
+                child: Text(
+                  AppLocale.EarningsText.getString(context),
+                  style: GoogleFonts.audiowide(
+                      color: colors.textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30),
+                ),
               ),
-            ),
-            HistoryWidget(history: history)
-          ],
+              HistoryWidget(
+                history: history,
+                colors: colors,
+              )
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: BottomNav(
-        primaryColor: primaryColor,
-        currentIndex: index,
-        onTap: (index) {
-          if (index == 2) {
-            context.go("/dashboard");
-          } else if (index == 4) {
-            context.go("/profile");
-          } else if (index == 1) {
-            context.go("/earnings");
-          } else if (index == 0) {
-            context.go("/withdraw");
-          }
-        },
       ),
     );
   }

@@ -98,6 +98,21 @@ class RegistrationManager {
     }
   }
 
+  Future<String> getAddressById(int id) async {
+    try {
+      final resultPromise = AddressById(id);
+      final resultDart = await resultPromise.toDart;
+      if (resultDart != null) {
+        return resultDart.toString();
+      } else {
+        return "";
+      }
+    } catch (e) {
+      logError(e.toString());
+      return "";
+    }
+  }
+
   Future<Map<String, dynamic>> getEvents() async {
     try {
       final resultPromise = getContractEvents();

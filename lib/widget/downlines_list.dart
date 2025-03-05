@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moon/languages/languages.dart';
 import 'package:moon/logger/logger.dart';
 import 'package:moon/types/types.dart';
 
 class DownlinesListWidget extends StatelessWidget {
   final List<DownlinesData> downlines;
-  const DownlinesListWidget({super.key, required this.downlines});
+  final AppColors colors;
+  const DownlinesListWidget(
+      {super.key, required this.downlines, required this.colors});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +25,7 @@ class DownlinesListWidget extends StatelessWidget {
               width: 1,
             )),
             borderRadius: BorderRadius.circular(20),
-            color: Color.fromARGB(0, 33, 33, 33)),
+            color: colors.secondaryColor.withOpacity(0.1)),
         child: Column(
           children: [
             ConstrainedBox(
@@ -35,7 +39,8 @@ class DownlinesListWidget extends StatelessWidget {
                     decoration: BoxDecoration(
                         border: Border(
                             bottom: BorderSide(
-                                color: Color.fromARGB(78, 47, 47, 47)))),
+                                color:
+                                    colors.secondaryColor.withOpacity(0.3)))),
                     child: Material(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(15),
@@ -59,7 +64,7 @@ class DownlinesListWidget extends StatelessWidget {
                             Text(
                               event.name,
                               style: GoogleFonts.exo(
-                                  color: Colors.white, fontSize: 15),
+                                  color: colors.textColor, fontSize: 15),
                             ),
                             SizedBox(
                               width: 10,
@@ -75,14 +80,14 @@ class DownlinesListWidget extends StatelessWidget {
                               child: Text(
                                 "ID ${event.id}",
                                 style: GoogleFonts.audiowide(
-                                    color: Colors.white, fontSize: 10),
+                                    color: colors.textColor, fontSize: 10),
                               ),
                             )
                           ],
                         ),
                         trailing: Text(
                           event.time,
-                          style: GoogleFonts.exo(color: Colors.white),
+                          style: GoogleFonts.exo(color: colors.textColor),
                         ),
                       ),
                     ),
@@ -95,7 +100,7 @@ class DownlinesListWidget extends StatelessWidget {
               width: width * 0.65,
               height: 40,
               decoration: BoxDecoration(
-                color: Color(0XFF434343),
+                color: colors.secondaryColor,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Material(
@@ -116,14 +121,14 @@ class DownlinesListWidget extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.dashboard,
-                              color: Colors.white,
+                              color: colors.textColor,
                             ),
                             SizedBox(
                               width: 10,
                             ),
                             Text(
-                              "Go to Dashboard",
-                              style: GoogleFonts.exo(color: Colors.white),
+                              AppLocale.GoToDashboardText.getString(context),
+                              style: GoogleFonts.exo(color: colors.textColor),
                             ),
                           ],
                         ),

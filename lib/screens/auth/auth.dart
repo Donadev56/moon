@@ -1,13 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:moon/languages/languages.dart';
 import 'package:moon/logger/logger.dart';
+import 'package:moon/types/types.dart';
+import 'package:moon/utils/colors.dart';
 
 import 'package:moon/utils/ethereum.dart';
 import 'package:moon/utils/register.dart';
+import 'package:moon/utils/themes.dart';
 import 'package:moon/widget/model_bottom.dart';
 import 'package:moon/widget/snackbar.dart';
 
@@ -27,6 +32,8 @@ final List<Map<String, dynamic>> options = [
 ];
 
 class _AuthScreenState extends State<AuthScreen> {
+  final FlutterLocalization _localization = FlutterLocalization.instance;
+
   String sponsorID = "";
   String userName = "";
   String userAddress = "";
@@ -34,6 +41,33 @@ class _AuthScreenState extends State<AuthScreen> {
   Map<String, dynamic> sponsorData = {};
   bool isRegistering = false;
   late TextEditingController _textEditingController;
+  AppColors colors = AppColors(
+      primaryColor: Color(0XFF0D0D0D),
+      themeColor: Colors.greenAccent,
+      greenColor: Colors.greenAccent,
+      secondaryColor: Color(0XFF121212),
+      grayColor: Color(0XFF353535),
+      textColor: Colors.white,
+      redColor: Colors.pinkAccent);
+
+  bool saved = false;
+  Themes themes = Themes();
+  String savedThemeName = "";
+  Future<void> getSavedTheme() async {
+    try {
+      final manager = ColorsManager();
+      final savedName = await manager.getThemeName();
+      setState(() {
+        savedThemeName = savedName ?? "";
+      });
+      final savedTheme = await manager.getDefaultTheme();
+      setState(() {
+        colors = savedTheme;
+      });
+    } catch (e) {
+      logError(e.toString());
+    }
+  }
 
   Future<void> getUserAddress() async {
     try {
@@ -101,7 +135,7 @@ class _AuthScreenState extends State<AuthScreen> {
             icon: Icons.error,
             message: "User already registered",
             iconColor: Colors.red);
-        context.go('/dashboard');
+        context.go('/main');
 
         return;
       }
@@ -151,7 +185,9 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void initState() {
     super.initState();
+    getSavedTheme();
     getUserAddress();
+
     _textEditingController = TextEditingController();
 
     if (widget.ref != null) {
@@ -185,17 +221,19 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    bool isArabic = _localization.currentLocale!.languageCode.contains("ar");
 
     return Scaffold(
-        backgroundColor: Color(0XFF0D0D0D),
+        backgroundColor: colors.primaryColor,
         appBar: AppBar(
-          surfaceTintColor: Color(0XFF0D0D0D),
+          automaticallyImplyLeading: false,
+          surfaceTintColor: colors.primaryColor,
           actions: [
             Container(
                 margin: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color.fromARGB(98, 53, 53, 53)),
+                    color: colors.secondaryColor),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -209,24 +247,113 @@ class _AuthScreenState extends State<AuthScreen> {
                         children: [
                           Text(
                             userAddress.isEmpty
-                                ? "Connect Wallet"
+                                ? AppLocale.connectWalletText.getString(context)
                                 : "${userAddress.substring(0, 4)}...${userAddress.substring(userAddress.length - 4, userAddress.length)}",
-                            style: GoogleFonts.audiowide(color: Colors.white),
+                            style:
+                                GoogleFonts.audiowide(color: colors.textColor),
                           )
                         ],
                       ),
                     ),
                   ),
+                )),
+            IconButton(
+                onPressed: () {
+                  showModalBottomSheet(
+                      backgroundColor: colors.primaryColor,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15)),
+                      context: context,
+                      builder: (BuildContext ctx) {
+                        return Container(
+                          decoration: BoxDecoration(
+                              color: Color(0XFF0D0D0D),
+                              borderRadius: BorderRadius.circular(15)),
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: TextField(
+                                  style: GoogleFonts.roboto(
+                                      color: colors.textColor),
+                                  decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      hintText: "Search languages...",
+                                      hintStyle: GoogleFonts.roboto(
+                                          color: colors.textColor),
+                                      fillColor: colors.secondaryColor,
+                                      filled: true,
+                                      enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              width: 0,
+                                              color: Colors.transparent),
+                                          borderRadius:
+                                              BorderRadius.circular(30)),
+                                      focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                              width: 3,
+                                              color: colors.themeColor),
+                                          borderRadius:
+                                              BorderRadius.circular(10))),
+                                ),
+                              ),
+                              SizedBox(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.4,
+                                child: ListView.builder(
+                                    itemCount: _localization
+                                        .supportedLanguageCodes.length,
+                                    itemBuilder: (BuildContext listCtx, index) {
+                                      final currentLang = _localization
+                                              .currentLocale?.languageCode ??
+                                          "";
+                                      final languageCode = _localization
+                                          .supportedLanguageCodes[index];
+                                      final countryCode = _localization
+                                          .supportedLocales
+                                          .toList()[index]
+                                          .countryCode;
+                                      return ColoredBox(
+                                          color:
+                                              languageCode.contains(currentLang)
+                                                  ? colors.themeColor
+                                                      .withOpacity(0.1)
+                                                  : Colors.transparent,
+                                          child: ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.only(left: 15),
+                                            onTap: () {
+                                              _localization
+                                                  .translate(languageCode);
+                                              Navigator.pop(context);
+                                            },
+                                            title: Text(
+                                              "$languageCode - $countryCode",
+                                              style: GoogleFonts.roboto(
+                                                  color: colors.textColor),
+                                            ),
+                                          ));
+                                    }),
+                              ),
+                            ],
+                          ),
+                        );
+                      });
+                },
+                icon: Icon(
+                  LucideIcons.languages,
+                  color: colors.textColor,
                 ))
           ],
           title: Align(
             alignment: Alignment.centerLeft,
             child: Text(
               "Moon BNB",
-              style: GoogleFonts.audiowide(color: Colors.white, fontSize: 18),
+              style:
+                  GoogleFonts.audiowide(color: colors.textColor, fontSize: 18),
             ),
           ),
-          backgroundColor: Color(0XFF0D0D0D),
+          backgroundColor: colors.primaryColor,
         ),
         body: SingleChildScrollView(
           child: Container(
@@ -245,15 +372,17 @@ class _AuthScreenState extends State<AuthScreen> {
                     Container(
                       padding: const EdgeInsets.only(left: 15, top: 25),
                       child: Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: isArabic
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Register in ",
+                              AppLocale.registerInText.getString(context),
                               style: GoogleFonts.audiowide(
-                                  color: Colors.white, fontSize: 25),
+                                  color: colors.textColor, fontSize: 25),
                             ),
                             Text(
                               "MoonBNB Project",
@@ -267,14 +396,16 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: isArabic
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Container(
                         padding:
                             const EdgeInsets.only(left: 15, top: 10, bottom: 5),
                         child: Text(
-                          "Register to start earning money globally",
+                          AppLocale.regDescText.getString(context),
                           style: GoogleFonts.exo2(
-                              color: const Color.fromARGB(137, 255, 255, 255)),
+                              color: colors.textColor.withOpacity(0.5)),
                         ),
                       ),
                     )
@@ -287,15 +418,16 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Row(
                       children: [
                         Text(
-                          "Sponsor Name :",
-                          style: GoogleFonts.audiowide(color: Colors.white),
+                          "${AppLocale.SponsorText.getString(context)} ${AppLocale.nameText.getString(context)}:",
+                          style: GoogleFonts.audiowide(color: colors.textColor),
                         ),
                         SizedBox(
                           width: 10,
                         ),
                         Text(
                           sponsorData["userData"]["name"],
-                          style: GoogleFonts.audiowide(color: Colors.orange),
+                          style:
+                              GoogleFonts.audiowide(color: colors.themeColor),
                         )
                       ],
                     ),
@@ -311,9 +443,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       padding: const EdgeInsets.all(10),
                       margin: const EdgeInsets.only(top: 0, bottom: 10),
                       child: Text(
-                        "Name",
+                        AppLocale.nameText.getString(context),
                         style: GoogleFonts.audiowide(
-                            color: Colors.white,
+                            color: colors.textColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 20),
                       ),
@@ -326,24 +458,25 @@ class _AuthScreenState extends State<AuthScreen> {
                             userName = value;
                           });
                         },
-                        cursorColor: Colors.orange,
-                        style: GoogleFonts.exo(color: Colors.white),
+                        cursorColor: colors.themeColor,
+                        style: GoogleFonts.exo(color: colors.textColor),
                         decoration: InputDecoration(
-                          labelStyle: GoogleFonts.exo(color: Colors.white),
+                          labelStyle: GoogleFonts.exo(color: colors.textColor),
                           focusedBorder: OutlineInputBorder(
                               borderSide:
-                                  BorderSide(width: 2, color: Colors.white),
+                                  BorderSide(width: 2, color: colors.textColor),
                               borderRadius: BorderRadius.circular(0)),
                           enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   width: 2,
-                                  color: Colors.white.withOpacity(0.5)),
+                                  color: colors.textColor.withOpacity(0.5)),
                               borderRadius: BorderRadius.circular(10)),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: Colors.grey),
+                            borderSide: BorderSide(
+                                color: colors.grayColor.withOpacity(0.4)),
                           ),
-                          labelText: "NickName",
+                          labelText: AppLocale.NickNameText.getString(context),
                         ),
                       ),
                     ),
@@ -352,9 +485,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       padding: const EdgeInsets.all(10),
                       margin: const EdgeInsets.only(top: 20, bottom: 10),
                       child: Text(
-                        "Sponsor",
+                        AppLocale.SponsorText.getString(context),
                         style: GoogleFonts.audiowide(
-                            color: Colors.white,
+                            color: colors.textColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 20),
                       ),
@@ -370,24 +503,25 @@ class _AuthScreenState extends State<AuthScreen> {
                           });
                           await getUserdataWithAddress(sponsorID);
                         },
-                        cursorColor: Colors.orange,
-                        style: GoogleFonts.exo(color: Colors.white),
+                        cursorColor: colors.themeColor,
+                        style: GoogleFonts.exo(color: colors.textColor),
                         decoration: InputDecoration(
-                          labelStyle: GoogleFonts.exo(color: Colors.white),
+                          labelStyle: GoogleFonts.exo(color: colors.textColor),
                           focusedBorder: OutlineInputBorder(
                               borderSide:
-                                  BorderSide(width: 2, color: Colors.white),
+                                  BorderSide(width: 2, color: colors.textColor),
                               borderRadius: BorderRadius.circular(0)),
                           enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   width: 2,
-                                  color: Colors.white.withOpacity(0.5)),
+                                  color: colors.textColor.withOpacity(0.5)),
                               borderRadius: BorderRadius.circular(10)),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: Colors.grey),
+                            borderSide: BorderSide(
+                                color: colors.grayColor.withOpacity(0.4)),
                           ),
-                          labelText: "Sponsor",
+                          labelText: AppLocale.SponsorText.getString(context),
                         ),
                       ),
                     ),
@@ -409,25 +543,26 @@ class _AuthScreenState extends State<AuthScreen> {
                                     return;
                                   }
                                   showModelBottomSheet(
-                                      context,
-                                      "0.0003",
-                                      "Registration",
-                                      "By accepting this request you accept the terms and conditions of work to join Moon BNB and its community.",
-                                      "0xC4A39C048177A339a3C46759B89a9eC01c56407a",
-                                      () async {
-                                    await registration();
-                                  });
+                                      colors: colors,
+                                      context: context,
+                                      amount: "0.0003",
+                                      actionName: "Registration",
+                                      termes:
+                                          "By accepting this request you accept the terms and conditions of work to join Moon BNB and its community.",
+                                      to: "0xC4A39C048177A339a3C46759B89a9eC01c56407a",
+                                      onContinue: () async {
+                                        await registration();
+                                      });
                                 },
                                 child: Text(
-                                  'Register',
-                                  style: GoogleFonts.exo2(
-                                      color:
-                                          const Color.fromARGB(208, 0, 0, 0)),
+                                  AppLocale.registerText.getString(context),
+                                  style:
+                                      GoogleFonts.exo2(color: colors.textColor),
                                 )),
                           )
                         : Center(
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: colors.textColor,
                             ),
                           ),
                     SizedBox(
@@ -441,10 +576,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         width: width * 0.63,
                         padding: const EdgeInsets.all(10),
                         child: Text(
-                          "Already Registered ? ",
+                          AppLocale.alreadyRegistered.getString(context),
                           style: GoogleFonts.exo2(
                             fontSize: 16,
-                            color: Colors.white.withOpacity(0.7),
+                            color: colors.textColor.withOpacity(0.7),
                           ),
                         ),
                       ),

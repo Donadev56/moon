@@ -1,16 +1,21 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moon/languages/languages.dart';
 import 'package:moon/logger/logger.dart';
 import 'package:moon/types/types.dart';
+import 'package:moon/utils/colors.dart';
 import 'package:moon/utils/ethereum.dart';
 import 'package:moon/utils/moon.dart';
 import 'package:moon/utils/register.dart';
+import 'package:moon/utils/themes.dart';
 import 'package:moon/widget/bottom.dart';
 import 'package:moon/widget/custom_appbar.dart';
 import 'package:moon/widget/model_bottom.dart';
+import 'package:moon/widget/page_manager_app_bar.dart';
 import 'package:moon/widget/snackbar.dart';
 import 'package:moon/widget/withdraw_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,24 +29,52 @@ class Withdraw extends StatefulWidget {
 
 class _WithdrawState extends State<Withdraw> {
   final List<HistoryData> history = [];
+  final FlutterLocalization _localization = FlutterLocalization.instance;
 
   String name = "";
   String link = "https://moonbnb.app/#/register?ref=";
   bool isLoading = true;
 
-  Color primaryColor = Colors.orange;
   List<double> levels = [];
   String userAddress = "";
   int index = 0;
   bool isWithdrawing = false;
   double availableGain = 0;
+  bool isPreviewMode = false;
+  AppColors colors = AppColors(
+      primaryColor: Color(0XFF0D0D0D),
+      themeColor: Colors.greenAccent,
+      greenColor: Colors.greenAccent,
+      secondaryColor: Color(0XFF121212),
+      grayColor: Color(0XFF353535),
+      textColor: Colors.white,
+      redColor: Colors.pinkAccent);
+
+  bool saved = false;
+  Themes themes = Themes();
+  String savedThemeName = "";
+  Future<void> getSavedTheme() async {
+    try {
+      final manager = ColorsManager();
+      final savedName = await manager.getThemeName();
+      setState(() {
+        savedThemeName = savedName ?? "";
+      });
+      final savedTheme = await manager.getDefaultTheme();
+      setState(() {
+        colors = savedTheme;
+      });
+    } catch (e) {
+      logError(e.toString());
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     getLevels();
+    getSavedTheme();
 
-    getColor();
     getUserAddress();
   }
 
@@ -72,34 +105,6 @@ class _WithdrawState extends State<Withdraw> {
     } catch (e) {
       logError(e.toString());
     }
-  }
-
-  void changeColor(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('color', value);
-    setState(() {
-      if (value == "orange") {
-        primaryColor = Colors.orange;
-      } else if (value == "blue") {
-        primaryColor = Colors.blue;
-      } else if (value == "green") {
-        primaryColor = Colors.greenAccent;
-      }
-    });
-  }
-
-  void getColor() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString('color');
-    setState(() {
-      if (value == "orange") {
-        primaryColor = Colors.orange;
-      } else if (value == "blue") {
-        primaryColor = Colors.blue;
-      } else if (value == "green") {
-        primaryColor = Colors.greenAccent;
-      }
-    });
   }
 
   void getUserAddress() async {
@@ -134,9 +139,9 @@ class _WithdrawState extends State<Withdraw> {
         log(json.encode(result).toString());
         final data = result["response"];
         for (final hist in json.decode(data).reversed.toList()) {
-          final name = hist["actionName"];
-          final time = inDays(hist["actionDate"]).toString();
-          final amount = (hist["actionAmount"] / 1e18).toString();
+          final time = inDays(hist["actionDate"]);
+          final amount = (hist["actionAmount"] / 1e18);
+
           final from = hist["actionFrom"];
           final idResult = await regManager.getUserInfo(from);
           if (idResult.isNotEmpty) {
@@ -146,7 +151,7 @@ class _WithdrawState extends State<Withdraw> {
             log("user id: $id");
             final HistoryData newHistory = HistoryData(
                 id: id,
-                name: name,
+                name: AppLocale.withdrawText.getString(context),
                 icon: Icons.monetization_on,
                 iconColor: Colors.greenAccent,
                 time: time,
@@ -173,42 +178,45 @@ class _WithdrawState extends State<Withdraw> {
       }
 
       showModelBottomSheet(
-          context,
-          availableGain.toString(),
-          "Withdraw of $availableGain BNB",
-          "You are about to withdraw $availableGain from your Global earnings and you will receive the amount directly in $userAddress",
-          userAddress, () async {
-        Navigator.pop(context);
-        setState(() {
-          isWithdrawing = true;
-          getAvailableGain(userAddress);
-          getHistories(userAddress);
-        });
+          colors: colors,
+          context: context,
+          amount: availableGain.toString(),
+          actionName: "Withdraw of $availableGain BNB",
+          termes:
+              "You are about to withdraw $availableGain from your Global earnings and you will receive the amount directly in $userAddress",
+          to: userAddress,
+          onContinue: () async {
+            Navigator.pop(context);
+            setState(() {
+              isWithdrawing = true;
+              getAvailableGain(userAddress);
+              getHistories(userAddress);
+            });
 
-        final manager = MoonContractManager();
-        final result = await manager.withdraw();
-        if (result) {
-          setState(() {
-            availableGain = 0;
-            isWithdrawing = false;
-          });
-          if (!mounted) return;
-          showCustomSnackBar(
-              context: context,
-              message: "Withdraw Successfully",
-              iconColor: Colors.greenAccent);
-        } else {
-          setState(() {
-            isWithdrawing = false;
-          });
-          if (!mounted) return;
+            final manager = MoonContractManager();
+            final result = await manager.withdraw();
+            if (result) {
+              setState(() {
+                availableGain = 0;
+                isWithdrawing = false;
+              });
+              if (!mounted) return;
+              showCustomSnackBar(
+                  context: context,
+                  message: "Withdraw Successfully",
+                  iconColor: Colors.greenAccent);
+            } else {
+              setState(() {
+                isWithdrawing = false;
+              });
+              if (!mounted) return;
 
-          showCustomSnackBar(
-              context: context,
-              message: "Failed to Withdraw Level",
-              iconColor: Colors.pinkAccent);
-        }
-      });
+              showCustomSnackBar(
+                  context: context,
+                  message: "Failed to Withdraw Level",
+                  iconColor: Colors.pinkAccent);
+            }
+          });
     } catch (e) {
       logError(e.toString());
       setState(() {
@@ -230,58 +238,49 @@ class _WithdrawState extends State<Withdraw> {
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
+    bool isArabic = _localization.currentLocale!.languageCode.contains("ar");
+
     double boxSize = width * 0.9;
     return Scaffold(
-      backgroundColor: Color(0XFF0D0D0D),
-      appBar: TopBar(
+      backgroundColor: colors.primaryColor,
+      appBar: PageManagerTopBar(
+        colors: colors,
+        isPreviewMode: isPreviewMode,
         path: "/dashboard",
-        changeColor: changeColor,
+        changeColor: (data) {},
         address: userAddress,
-        primaryColor: Color(0XFF0D0D0D),
-        secondaryColor: Colors.white,
+        primaryColor: colors.primaryColor,
+        secondaryColor: colors.textColor,
       ),
-      body: Container(
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: boxSize,
-              padding: const EdgeInsets.all(10),
-              margin: const EdgeInsets.only(top: 20, bottom: 10),
-              child: Text(
-                "Withdraw",
-                style: GoogleFonts.audiowide(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 30),
+      body: SingleChildScrollView(
+        child: Container(
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: boxSize,
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.only(top: 20),
+                child: Text(
+                  AppLocale.withdrawText.getString(context),
+                  style: GoogleFonts.audiowide(
+                      color: colors.textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30),
+                ),
               ),
-            ),
-            HistoryWidget(
-              history: history,
-              onTap: withdraw,
-              amount: availableGain,
-              isWithdrawing: isWithdrawing,
-            )
-          ],
+              HistoryWidget(
+                colors: colors,
+                isArabic: isArabic,
+                history: history,
+                onTap: withdraw,
+                amount: availableGain,
+                isWithdrawing: isWithdrawing,
+              )
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: BottomNav(
-        primaryColor: primaryColor,
-        currentIndex: index,
-        onTap: (index) {
-          if (index == 2) {
-            context.go("/dashboard");
-          } else if (index == 4) {
-            context.go("/profile");
-          } else if (index == 1) {
-            context.go("/earnings");
-          } else if (index == 0) {
-            context.go("/withdraw");
-          } else if (index == 3) {
-            context.go("/team");
-          }
-        },
       ),
     );
   }

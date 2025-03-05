@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:moon/types/types.dart';
 
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
   final Color primaryColor;
+  final AppColors colors;
 
   const BottomNav({
     Key? key,
     required this.currentIndex,
     this.onTap,
     required this.primaryColor,
+    required this.colors,
   }) : super(key: key);
 
   @override
@@ -22,16 +25,16 @@ class BottomNav extends StatelessWidget {
       {'icon': Icons.monetization_on, 'label': 'Earnings'},
       {'icon': Icons.dashboard, 'label': 'Dashboard'},
       {'icon': Icons.people, 'label': 'Team'},
-      {'icon': Icons.person, 'label': 'Profile'},
+      {'icon': Icons.settings, 'label': 'Profile'},
     ];
 
     return BottomNavigationBar(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: colors.primaryColor,
       currentIndex: currentIndex,
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: primaryColor,
-      unselectedItemColor: Colors.white,
+      selectedItemColor: colors.themeColor,
+      unselectedItemColor: colors.textColor,
       selectedLabelStyle: GoogleFonts.exo2(fontSize: 12),
       unselectedLabelStyle: GoogleFonts.exo2(),
       items: List.generate(navItems.length, (index) {
@@ -39,17 +42,17 @@ class BottomNav extends StatelessWidget {
         final bool isSelected = index == currentIndex;
 
         return BottomNavigationBarItem(
-          backgroundColor: const Color(0xFF0D0D0D),
+          backgroundColor: colors.secondaryColor,
           icon: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isSelected
-                  ? primaryColor.withOpacity(0.2)
+                  ? colors.themeColor.withOpacity(0.2)
                   : Colors.transparent,
               border: Border.all(
-                color: isSelected ? primaryColor : Colors.transparent,
+                color: isSelected ? colors.themeColor : Colors.transparent,
                 width: 2,
               ),
             ),
@@ -60,7 +63,7 @@ class BottomNav extends StatelessWidget {
               child: Icon(item['icon'] as IconData),
             ),
           ),
-          label: isSelected ? item['label'] as String : "",
+          label: "",
         );
       }),
     );

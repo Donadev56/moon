@@ -6,27 +6,37 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moon/types/types.dart';
+import 'package:moon/utils/ethereum.dart';
 import 'package:moon/widget/colors_dialog.dart';
+import 'dart:html' as html;
+
+import 'package:moon/widget/snackbar.dart';
 
 typedef ChangeModelType = void Function(String model);
 typedef ChangeColor = void Function(String color);
 
-class TopBar extends StatelessWidget implements PreferredSizeWidget {
+class PageManagerTopBar extends StatelessWidget implements PreferredSizeWidget {
   final Color primaryColor;
   final Color secondaryColor;
   final String address;
   final String path;
   final AppColors colors;
+  final bool isPreviewMode;
+  final Future<void> Function()? reInit;
   final ChangeColor changeColor;
   final FlutterLocalization _localization = FlutterLocalization.instance;
+  final VoidCallback? onSearchTap;
 
-  TopBar({
+  PageManagerTopBar({
     super.key,
     required this.path,
     required this.primaryColor,
     required this.secondaryColor,
     required this.address,
     required this.changeColor,
+    this.onSearchTap,
+    required this.isPreviewMode,
+    this.reInit,
     required this.colors,
   });
 
@@ -35,47 +45,65 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
     double width = MediaQuery.of(context).size.width;
 
     return AppBar(
-      surfaceTintColor: colors.grayColor,
-      backgroundColor: colors.primaryColor,
+      automaticallyImplyLeading: false,
+      surfaceTintColor: isPreviewMode ? Colors.lightBlueAccent : primaryColor,
+      backgroundColor: isPreviewMode ? Colors.blue : primaryColor,
       titleSpacing: 0,
-      leading: IconButton(
-        onPressed: () {
-          context.go(path);
-        },
-        icon: Icon(
-          Icons.arrow_back,
-          color: colors.textColor.withOpacity(0.5),
-        ),
-        color: secondaryColor,
-      ),
+      leading: isPreviewMode
+          ? IconButton(
+              onPressed: () async {
+                final web3manager = Web3Manager();
+                final res = await web3manager.deleteLastPreviewAddress();
+                if (res) {
+                  showCustomSnackBar(
+                      context: context,
+                      message: "Done ! please reload the page",
+                      iconColor: Colors.greenAccent,
+                      icon: Icons.check_circle);
+
+                  await reInit;
+                }
+              },
+              icon: Icon(
+                Icons.remove_red_eye,
+                color: colors.textColor,
+              ))
+          : null,
       title: Row(
         children: [
-          TextButton(
-              onPressed: () {},
-              child: Row(
-                children: [
-                  Container(
-                    width: width * 0.4,
-                    child: width < 345
-                        ? null
-                        : Text(
-                            "Moon BNB",
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.audiowide(
-                              color: secondaryColor,
-                              fontSize: width > 370 ? 19 : 15,
-                              fontWeight: FontWeight.bold,
+          if (onSearchTap != null)
+            TextButton(
+                onPressed: onSearchTap,
+                child: Row(
+                  spacing: 10,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.search,
+                      color: secondaryColor.withOpacity(0.7),
+                    ),
+                    SizedBox(
+                      width: width * 0.4,
+                      child: width < 345
+                          ? null
+                          : Text(
+                              "Search",
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.roboto(
+                                color: secondaryColor.withOpacity(0.7),
+                                fontSize: width > 370 ? 19 : 15,
+                              ),
                             ),
-                          ),
-                  )
-                ],
-              )),
+                    )
+                  ],
+                ))
         ],
       ),
       actions: [
         Container(
           decoration: BoxDecoration(
-              color: colors.secondaryColor.withOpacity(0.2),
+              color: colors.secondaryColor,
               borderRadius: BorderRadius.circular(30)),
           child: Material(
             color: Colors.transparent,
@@ -110,11 +138,12 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
         PopupMenuButton(
-          color: colors.grayColor,
+          color: colors.primaryColor,
           icon: Icon(CupertinoIcons.ellipsis_vertical),
           iconColor: secondaryColor,
           onSelected: (value) async {
             if (value == "color") {
+              context.go("/settings/change_theme");
             } else if (value.toLowerCase() == "Lang".toLowerCase()) {
               showModalBottomSheet(
                   backgroundColor: colors.primaryColor,
@@ -138,8 +167,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                                   hintText: "Search languages...",
                                   hintStyle: GoogleFonts.roboto(
                                       color: colors.textColor.withOpacity(0.3)),
-                                  fillColor:
-                                      colors.secondaryColor.withOpacity(0.1),
+                                  fillColor: colors.secondaryColor,
                                   filled: true,
                                   enabledBorder: OutlineInputBorder(
                                       borderSide: BorderSide(
@@ -168,7 +196,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
                                       .countryCode;
                                   return ColoredBox(
                                       color: languageCode.contains(currentLang)
-                                          ? colors.themeColor.withOpacity(0.1)
+                                          ? colors.themeColor
                                           : Colors.transparent,
                                       child: ListTile(
                                         contentPadding:
@@ -193,23 +221,31 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
           },
           itemBuilder: (BuildContext context) => [
             PopupMenuItem(
-              value: 'logout',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.logout_outlined,
-                    color: colors.textColor,
+                onTap: () {
+                  context.go("/");
+                },
+                value: 'logout',
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                      color: Colors.pink.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.logout_outlined,
+                        color: colors.textColor,
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        'Logout',
+                        style: TextStyle(color: colors.textColor),
+                      ),
+                    ],
                   ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text(
-                    'Logout',
-                    style: TextStyle(color: colors.textColor),
-                  ),
-                ],
-              ),
-            ),
+                )),
             PopupMenuItem(
               value: 'color',
               child: Row(

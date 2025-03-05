@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moon/types/types.dart';
 
 class ProfitWidget extends StatelessWidget {
   final String title;
   final String totalAmount;
   final String dailyAmount;
   final String imageUrl;
+  final AppColors colors;
   const ProfitWidget(
       {super.key,
       required this.title,
       required this.totalAmount,
       required this.dailyAmount,
-      required this.imageUrl});
+      required this.imageUrl,
+      required this.colors});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +24,12 @@ class ProfitWidget extends StatelessWidget {
         padding: const EdgeInsets.all(13),
         height: 102,
         decoration: BoxDecoration(
-            image:
-                DecorationImage(image: AssetImage(imageUrl), fit: BoxFit.cover),
-            color: Color(0XFF212121),
+            image: DecorationImage(
+                image: AssetImage(
+                  imageUrl,
+                ),
+                scale: 0.2),
+            color: colors.secondaryColor,
             borderRadius: BorderRadius.circular(15)),
         child: Align(
           alignment: Alignment.centerLeft,
@@ -32,14 +38,14 @@ class ProfitWidget extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: GoogleFonts.exo(
-                    color: const Color.fromARGB(184, 255, 255, 255)),
+                style:
+                    GoogleFonts.exo(color: colors.textColor.withOpacity(0.8)),
               ),
               Text(
                 totalAmount,
                 style: GoogleFonts.exo2(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: colors.textColor,
                     fontSize: 25),
               ),
               Row(
@@ -47,7 +53,7 @@ class ProfitWidget extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.arrow_upward,
-                    color: const Color.fromARGB(177, 255, 255, 255),
+                    color: colors.textColor.withOpacity(0.7),
                     size: 17,
                   ),
                   SizedBox(
@@ -56,7 +62,7 @@ class ProfitWidget extends StatelessWidget {
                   Text(
                     dailyAmount,
                     style: GoogleFonts.exo2(
-                        color: const Color.fromARGB(188, 255, 255, 255)),
+                        color: colors.textColor.withOpacity(0.7)),
                   )
                 ],
               )

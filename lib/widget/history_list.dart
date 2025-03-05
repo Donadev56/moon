@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moon/languages/languages.dart';
 import 'package:moon/logger/logger.dart';
 import 'package:moon/types/types.dart';
+import 'package:moon/utils/price.dart';
 
 class HistoryWidget extends StatelessWidget {
   final List<HistoryData> history;
-  const HistoryWidget({super.key, required this.history});
+  final AppColors colors;
+  const HistoryWidget({super.key, required this.history, required this.colors});
+
+  double calculateTotalAmount(List<HistoryData> userH) {
+    double gain = 0;
+    for (final hist in userH) {
+      gain += hist.amount;
+    }
+
+    return gain;
+  }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final manager = PriceManager();
+
     return Container(
         width: width * 0.9,
         padding: const EdgeInsets.all(10),
@@ -21,9 +36,50 @@ class HistoryWidget extends StatelessWidget {
               width: 1,
             )),
             borderRadius: BorderRadius.circular(20),
-            color: Color.fromARGB(0, 33, 33, 33)),
+            color: colors.grayColor.withOpacity(0.3)),
         child: Column(
           children: [
+            Container(
+              width: width * 0.9,
+              padding: const EdgeInsets.all(5),
+              margin: const EdgeInsets.only(top: 5, bottom: 5),
+              child: Text(
+                "${calculateTotalAmount(history).toStringAsFixed(8)} BNB",
+                style: GoogleFonts.roboto(
+                    color: colors.textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20),
+              ),
+            ),
+            FutureBuilder(
+                future: manager.getPrice(),
+                builder: (BuildContext ctx, AsyncSnapshot result) {
+                  if (result.hasData) {
+                    return Container(
+                      width: width * 0.9,
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        "= ${(calculateTotalAmount(history) * result.data).toStringAsFixed(5)} USDT",
+                        style: GoogleFonts.roboto(
+                            color: colors.textColor.withOpacity(0.6),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20),
+                      ),
+                    );
+                  } else {
+                    return Container(
+                      width: width * 0.9,
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        "Loading...",
+                        style: GoogleFonts.roboto(
+                            color: colors.textColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20),
+                      ),
+                    );
+                  }
+                }),
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: 300, minHeight: 100),
               child: ListView.builder(
@@ -35,7 +91,7 @@ class HistoryWidget extends StatelessWidget {
                     decoration: BoxDecoration(
                         border: Border(
                             bottom: BorderSide(
-                                color: Color.fromARGB(78, 47, 47, 47)))),
+                                color: colors.grayColor.withOpacity(0.3)))),
                     child: Material(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(15),
@@ -59,7 +115,7 @@ class HistoryWidget extends StatelessWidget {
                             Text(
                               event.name,
                               style: GoogleFonts.exo(
-                                  color: Colors.white, fontSize: 13),
+                                  color: colors.textColor, fontSize: 13),
                             ),
                             SizedBox(
                               width: 10,
@@ -75,15 +131,15 @@ class HistoryWidget extends StatelessWidget {
                               child: Text(
                                 "ID ${event.id}",
                                 style: GoogleFonts.audiowide(
-                                    color: Colors.white, fontSize: 10),
+                                    color: colors.textColor, fontSize: 10),
                               ),
                             )
                           ],
                         ),
                         trailing: Text(
-                          event.amount,
+                          "${event.amount}",
                           style: GoogleFonts.exo(
-                              color: Colors.white, fontSize: 11),
+                              color: colors.textColor, fontSize: 11),
                         ),
                       ),
                     ),
@@ -96,7 +152,7 @@ class HistoryWidget extends StatelessWidget {
               width: width * 0.65,
               height: 40,
               decoration: BoxDecoration(
-                color: Color(0XFF434343),
+                color: colors.grayColor,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Material(
@@ -117,14 +173,14 @@ class HistoryWidget extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.dashboard,
-                              color: Colors.white,
+                              color: colors.textColor,
                             ),
                             SizedBox(
                               width: 10,
                             ),
                             Text(
-                              "Go to Dashboard",
-                              style: GoogleFonts.exo(color: Colors.white),
+                              AppLocale.GoToDashboardText.getString(context),
+                              style: GoogleFonts.exo(color: colors.textColor),
                             ),
                           ],
                         ),

@@ -1,15 +1,25 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moon/languages/languages.dart';
+import 'package:moon/logger/logger.dart';
+import 'package:moon/types/types.dart';
 
 typedef OnPreviewTap = void Function();
 
 class ProgramWidjet extends StatelessWidget {
   final Color color;
+  final AppColors colors;
   final String name;
   final double amount;
   final int level;
   final String imageString;
   final OnPreviewTap onPreviewTap;
+  final String previewText;
+  final double width;
 
   const ProgramWidjet({
     super.key,
@@ -19,6 +29,9 @@ class ProgramWidjet extends StatelessWidget {
     required this.amount,
     required this.level,
     required this.onPreviewTap,
+    required this.previewText,
+    required this.width,
+    required this.colors,
   });
 
   @override
@@ -27,48 +40,62 @@ class ProgramWidjet extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: width * 0.85,
+          width: width,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
               image: DecorationImage(
                   image: AssetImage(imageString), fit: BoxFit.cover),
               borderRadius: BorderRadius.circular(20),
-              color: Color(0XFF212121)),
+              color: colors.secondaryColor),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                    border: Border.all(color: color, width: 3),
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(
-                          20,
-                        ),
-                        bottomLeft: Radius.circular(7),
-                        bottomRight: Radius.circular(7)),
-                    color: Color(0XFF181818)),
-                child: Row(
-                  children: [
-                    Text(
-                      name,
-                      style: GoogleFonts.exo(
-                          color: const Color.fromARGB(184, 255, 255, 255),
-                          fontSize: 18),
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(
+                      20,
                     ),
-                    Spacer(),
-                    Row(
+                    bottomLeft: Radius.circular(7),
+                    bottomRight: Radius.circular(7)),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: 8,
+                    sigmaY: 8,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(
+                              20,
+                            ),
+                            bottomLeft: Radius.circular(7),
+                            bottomRight: Radius.circular(7)),
+                        color: color.withOpacity(0.1)),
+                    child: Row(
                       children: [
                         Text(
-                          "$amount BNB",
-                          style: GoogleFonts.exo2(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          name,
+                          style: GoogleFonts.exo(
+                              color: colors.textColor.withOpacity(0.7),
                               fontSize: 18),
                         ),
+                        Spacer(),
+                        Row(
+                          children: [
+                            Text(
+                              "$amount BNB",
+                              style: GoogleFonts.exo2(
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textColor,
+                                  fontSize: 18),
+                            ),
+                          ],
+                        )
                       ],
-                    )
-                  ],
+                    ),
+                  ),
                 ),
               ),
               SizedBox(
@@ -79,10 +106,10 @@ class ProgramWidjet extends StatelessWidget {
                   return Container(
                     margin: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                        color: index < level ? color : Color(0XFF353535),
+                        color: index < level ? color : colors.grayColor,
                         borderRadius: BorderRadius.circular(10)),
-                    width: 34,
-                    height: 34,
+                    width: 30,
+                    height: 30,
                   );
                 }),
               ),
@@ -90,7 +117,7 @@ class ProgramWidjet extends StatelessWidget {
                 height: 10,
               ),
               Align(
-                alignment: Alignment.topLeft,
+                alignment: Alignment.center,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -99,19 +126,18 @@ class ProgramWidjet extends StatelessWidget {
                       onPreviewTap();
                     },
                     child: SizedBox(
-                        width: 170,
+                        width: width * 0.7,
                         child: Container(
                           decoration: BoxDecoration(
-                              border: Border.all(width: 3, color: color),
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(15)),
+                              color: color,
+                              borderRadius: BorderRadius.circular(35)),
                           padding: const EdgeInsets.all(4),
                           child: Center(
                             child: Text(
-                              "Preview",
+                              previewText,
                               style: GoogleFonts.exo2(
-                                color: Colors.white,
-                                fontSize: 18,
+                                color: colors.textColor,
+                                fontSize: 16,
                               ),
                             ),
                           ),

@@ -130,6 +130,8 @@ window.getUserLevel = async (address )=> {
        
    }
 }
+
+
 window.GetAvailableGlobalGain = async (address )=> {
     try {
         const init = await initMoonWeb3()
@@ -192,6 +194,33 @@ window.getUserM50Data = async (address )=> {
     }
 }
 
+
+window.getPoolUsers = async (level )=> {
+  try {
+      const init = await initMoonWeb3()
+      
+      if (init.success) {
+         if (typeof init.response !== "string") {
+           const contract = init.response.vrContractInstance
+           
+           const users  = await contract.methods.getPoolUsers(level).call()
+         
+           return users
+          } else {
+
+              return {}
+          }
+      } else {
+          console.error('Error initializing Ethereum Web3:', init.response);
+           return { } ;
+      }
+  } catch (error) {
+      console.error('Error getting user in Pool level:', error);
+      return {};
+
+      
+  }
+}
 
 window.PurchaseLevel = async (level )=> {
     try {

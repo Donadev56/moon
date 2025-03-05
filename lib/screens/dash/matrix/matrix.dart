@@ -1,13 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localization/flutter_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:moon/languages/languages.dart';
 import 'package:moon/logger/logger.dart';
+import 'package:moon/types/types.dart';
+import 'package:moon/utils/colors.dart';
 import 'package:moon/utils/ethereum.dart';
 import 'package:moon/utils/moon.dart';
 import 'package:moon/utils/register.dart';
+import 'package:moon/utils/themes.dart';
 import 'package:moon/widget/custom_appbar.dart';
 import 'package:moon/widget/model_bottom.dart';
 import 'package:moon/widget/snackbar.dart';
@@ -38,12 +43,39 @@ class _MatrixScreenState extends State<MatrixScreen> {
   List<double> levels = [];
   String userAddress = "";
   int index = 2;
+  AppColors colors = AppColors(
+      primaryColor: Color(0XFF0D0D0D),
+      themeColor: Colors.greenAccent,
+      greenColor: Colors.greenAccent,
+      secondaryColor: Color(0XFF121212),
+      grayColor: Color(0XFF353535),
+      textColor: Colors.white,
+      redColor: Colors.pinkAccent);
+
+  bool saved = false;
+  Themes themes = Themes();
+  String savedThemeName = "";
+  Future<void> getSavedTheme() async {
+    try {
+      final manager = ColorsManager();
+      final savedName = await manager.getThemeName();
+      setState(() {
+        savedThemeName = savedName ?? "";
+      });
+      final savedTheme = await manager.getDefaultTheme();
+      setState(() {
+        colors = savedTheme;
+      });
+    } catch (e) {
+      logError(e.toString());
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     getLevels();
-
+    getSavedTheme();
     getColor();
     getUserAddress();
   }
@@ -228,40 +260,43 @@ class _MatrixScreenState extends State<MatrixScreen> {
         return;
       }
       showModelBottomSheet(
-          context,
-          levels[index].toString(),
-          "Level Purchase",
-          "By purchasing the level ${index + 1} at ${levels[index]} BNB, you accept the terms and conditions of work of moon Bnb and are aware of its operation.",
-          "0xeA292baCc8801728152b3273161a8800E07Fc57C", () async {
-        Navigator.pop(context);
-        setState(() {
-          isPurchasing = true;
-        });
+          colors: colors,
+          context: context,
+          amount: levels[index].toString(),
+          actionName: "Level Purchase",
+          termes:
+              "By purchasing the level ${index + 1} at ${levels[index]} BNB, you accept the terms and conditions of work of moon Bnb and are aware of its operation.",
+          to: "0xeA292baCc8801728152b3273161a8800E07Fc57C",
+          onContinue: () async {
+            Navigator.pop(context);
+            setState(() {
+              isPurchasing = true;
+            });
 
-        final manager = MoonContractManager();
-        final result = await manager.purchase(lvl);
-        if (result) {
-          setState(() {
-            level = lvl;
-            isPurchasing = false;
-          });
-          if (!mounted) return;
-          showCustomSnackBar(
-              context: context,
-              message: "Level Purchased Successfully",
-              iconColor: Colors.greenAccent);
-        } else {
-          setState(() {
-            isPurchasing = false;
-          });
-          if (!mounted) return;
+            final manager = MoonContractManager();
+            final result = await manager.purchase(lvl);
+            if (result) {
+              setState(() {
+                level = lvl;
+                isPurchasing = false;
+              });
+              if (!mounted) return;
+              showCustomSnackBar(
+                  context: context,
+                  message: "Level Purchased Successfully",
+                  iconColor: Colors.greenAccent);
+            } else {
+              setState(() {
+                isPurchasing = false;
+              });
+              if (!mounted) return;
 
-          showCustomSnackBar(
-              context: context,
-              message: "Failed to Purchase Level",
-              iconColor: Colors.pinkAccent);
-        }
-      });
+              showCustomSnackBar(
+                  context: context,
+                  message: "Failed to Purchase Level",
+                  iconColor: Colors.pinkAccent);
+            }
+          });
     } catch (e) {
       logError(e.toString());
       setState(() {
@@ -275,13 +310,14 @@ class _MatrixScreenState extends State<MatrixScreen> {
     double width = MediaQuery.of(context).size.width;
     double boxSize = width * 0.85;
     return Scaffold(
-        backgroundColor: Color(0XFF0D0D0D),
+        backgroundColor: colors.primaryColor,
         appBar: TopBar(
+          colors: colors,
           primaryColor: Color(0XFF0D0D0D),
           secondaryColor: Colors.white.withOpacity(0.6),
           address: userAddress,
           changeColor: changeColor,
-          path: "/dashboard",
+          path: "/main",
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -295,9 +331,9 @@ class _MatrixScreenState extends State<MatrixScreen> {
                       Container(
                         alignment: Alignment.topLeft,
                         child: Text(
-                          "M50 Gain",
+                          "M50 ${AppLocale.totalEarningsText.getString(context)}",
                           style: GoogleFonts.roboto(
-                            color: Colors.white.withOpacity(0.8),
+                            color: colors.textColor.withOpacity(0.8),
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
@@ -311,7 +347,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
                               "$amount BNB",
                               style: GoogleFonts.audiowide(
                                 color: primaryColor,
-                                fontSize: 25,
+                                fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -320,7 +356,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
                         height: 10,
                       ),
                       Divider(
-                        color: Colors.white.withOpacity(0.1),
+                        color: colors.textColor.withOpacity(0.1),
                       )
                     ],
                   )),
@@ -332,7 +368,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
                     alignment: Alignment.center,
                     width: boxSize,
                     decoration: BoxDecoration(
-                        color: Color(0XFF171717),
+                        color: colors.secondaryColor,
                         borderRadius: BorderRadius.circular(10)),
                     margin: const EdgeInsets.only(top: 15, right: 15, left: 15),
                     child: Material(
@@ -363,14 +399,17 @@ class _MatrixScreenState extends State<MatrixScreen> {
                                   Text(
                                     "$availableGain",
                                     style: GoogleFonts.audiowide(
-                                        color: Colors.white,
+                                        color: colors.textColor,
                                         fontSize: width < 389 ? 14 : 18),
                                   ),
-                                  Text("Global Gain",
-                                      style: GoogleFonts.exo(
-                                          color: const Color.fromARGB(
-                                              142, 255, 255, 255),
-                                          fontSize: 16))
+                                  Text(
+                                      AppLocale.GlobalGainText.getString(
+                                          context),
+                                      style:
+                                          GoogleFonts.exo(
+                                              color: colors.textColor
+                                                  .withOpacity(0.7),
+                                              fontSize: 16))
                                 ],
                               ),
                               Spacer(),
@@ -382,7 +421,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
                                       context.go("/withdraw");
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
+                                      backgroundColor: colors.textColor,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -390,17 +429,18 @@ class _MatrixScreenState extends State<MatrixScreen> {
                                     child: Row(
                                       children: [
                                         Text(
-                                          "Take Gift",
+                                          AppLocale.giftText.getString(context),
                                           style: GoogleFonts.exo2(
                                             fontSize: width < 389 ? 13 : 18,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.black87,
+                                            color: colors.secondaryColor
+                                                .withOpacity(0.8),
                                           ),
                                         ),
                                         Spacer(),
                                         Icon(
                                           LucideIcons.gift,
-                                          color: Colors.black,
+                                          color: colors.primaryColor,
                                         )
                                       ],
                                     )),
@@ -420,9 +460,9 @@ class _MatrixScreenState extends State<MatrixScreen> {
                   padding: const EdgeInsets.all(10),
                   margin: const EdgeInsets.only(top: 20, bottom: 10),
                   child: Text(
-                    "Plans",
+                    AppLocale.packagesText.getString(context),
                     style: GoogleFonts.audiowide(
-                        color: Colors.white,
+                        color: colors.textColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 30),
                   ),
@@ -444,7 +484,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
                           height: 200,
                           margin: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Color(0XFF212121),
+                            color: colors.secondaryColor,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Column(
@@ -452,7 +492,12 @@ class _MatrixScreenState extends State<MatrixScreen> {
                               Container(
                                 height: 50,
                                 decoration: BoxDecoration(
-                                    color: Color(0XFF353535),
+                                    border: Border(
+                                        bottom: BorderSide(
+                                            width: 0.5,
+                                            color: colors.textColor
+                                                .withOpacity(0.1))),
+                                    color: colors.secondaryColor,
                                     borderRadius: BorderRadius.only(
                                       topLeft: Radius.circular(10),
                                       topRight: Radius.circular(10),
@@ -473,7 +518,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
                                       child: Text(
                                         "${levels.isNotEmpty ? levels[index] : 0} BNB",
                                         style: GoogleFonts.roboto(
-                                            color: Colors.white,
+                                            color: colors.textColor,
                                             fontSize: 17,
                                             fontWeight: FontWeight.bold),
                                       ),
@@ -495,7 +540,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
                                       ? Container(
                                           margin: const EdgeInsets.all(20),
                                           child: CircularProgressIndicator(
-                                            color: Colors.white,
+                                            color: colors.textColor,
                                           ),
                                         )
                                       : Container(
@@ -504,7 +549,7 @@ class _MatrixScreenState extends State<MatrixScreen> {
                                                 ? LucideIcons.toggleRight
                                                 : LucideIcons.toggleLeft,
                                             color: isOpen
-                                                ? Colors.greenAccent
+                                                ? colors.themeColor
                                                 : Colors.orange,
                                             size: 80,
                                           ),
@@ -523,15 +568,19 @@ class _MatrixScreenState extends State<MatrixScreen> {
                                       purchase(index, isOpen);
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Color(0XFF353535),
+                                      backgroundColor: colors.grayColor,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.circular(30),
                                       ),
                                     ),
                                     child: Row(
                                       children: [
                                         Text(
-                                          isOpen ? "Working" : "Purchase",
+                                          isOpen
+                                              ? AppLocale.workingText
+                                                  .getString(context)
+                                              : AppLocale.purchaseText
+                                                  .getString(context),
                                           style: GoogleFonts.exo2(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
